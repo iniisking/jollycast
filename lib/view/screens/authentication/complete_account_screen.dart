@@ -46,14 +46,11 @@ class _CompleteAccountScreenState extends State<CompleteAccountScreen> {
       body: Stack(
         children: [
           Positioned.fill(
-            child: Align(
+            child: Assets.images.accountSetUpBackground.image(
+              fit: BoxFit.cover,
+              width: double.infinity,
+              height: double.infinity,
               alignment: Alignment.centerRight,
-              child: Assets.images.accountSetUpBackground.image(
-                fit: BoxFit.cover,
-                width: double.infinity,
-                height: double.infinity,
-                alignment: Alignment.centerRight,
-              ),
             ),
           ),
           SafeArea(
