@@ -7,10 +7,7 @@ import 'package:jollycast/view/screens/library/library_screen.dart';
 class MainScreen extends StatefulWidget {
   final int initialIndex;
 
-  const MainScreen({
-    super.key,
-    this.initialIndex = 0,
-  });
+  const MainScreen({super.key, this.initialIndex = 0});
 
   @override
   State<MainScreen> createState() => _MainScreenState();
@@ -40,10 +37,7 @@ class _MainScreenState extends State<MainScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack(
-        index: _currentIndex,
-        children: _screens,
-      ),
+      body: IndexedStack(index: _currentIndex, children: _screens),
       bottomNavigationBar: BottomNavBar(
         currentIndex: _currentIndex,
         onTap: _onNavItemTapped,
@@ -51,4 +45,3 @@ class _MainScreenState extends State<MainScreen> {
     );
   }
 }
-
