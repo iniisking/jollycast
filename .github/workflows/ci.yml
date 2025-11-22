@@ -43,10 +43,10 @@ jobs:
       - name: Upload coverage reports
         uses: codecov/codecov-action@v4
         if: always() && hashFiles('coverage/lcov.info') != ''
+        continue-on-error: true
         with:
           files: ./coverage/lcov.info
           fail_ci_if_error: false
-          token: ${{ secrets.CODECOV_TOKEN }}
 
   build-android:
     name: Build Android
