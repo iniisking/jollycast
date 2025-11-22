@@ -24,6 +24,10 @@ class $AssetsImagesGen {
   AssetGenImage get accountSetUpBackground =>
       const AssetGenImage('assets/images/account set up background.jpg');
 
+  /// File path: assets/images/headphone.png
+  AssetGenImage get headphone =>
+      const AssetGenImage('assets/images/headphone.png');
+
   /// File path: assets/images/logo onboarding 1.png
   AssetGenImage get logoOnboarding1 =>
       const AssetGenImage('assets/images/logo onboarding 1.png');
@@ -52,6 +56,7 @@ class $AssetsImagesGen {
   List<dynamic> get values => [
     aGitkeep,
     accountSetUpBackground,
+    headphone,
     logoOnboarding1,
     logoOnboarding2,
     logoOnboarding3,
@@ -94,8 +99,17 @@ class $AssetsSvgGen {
   /// File path: assets/svg/avatar 9.svg
   SvgGenImage get avatar9 => const SvgGenImage('assets/svg/avatar 9.svg');
 
+  /// File path: assets/svg/category.svg
+  SvgGenImage get category => const SvgGenImage('assets/svg/category.svg');
+
+  /// File path: assets/svg/discover.svg
+  SvgGenImage get discover => const SvgGenImage('assets/svg/discover.svg');
+
   /// File path: assets/svg/headphones.svg
   SvgGenImage get headphones => const SvgGenImage('assets/svg/headphones.svg');
+
+  /// File path: assets/svg/library.svg
+  SvgGenImage get library => const SvgGenImage('assets/svg/library.svg');
 
   /// List of all assets
   List<dynamic> get values => [
@@ -109,7 +123,10 @@ class $AssetsSvgGen {
     avatar7,
     avatar8,
     avatar9,
+    category,
+    discover,
     headphones,
+    library,
   ];
 }
 
