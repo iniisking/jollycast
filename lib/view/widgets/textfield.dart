@@ -52,10 +52,7 @@ class AuthTextFormField extends StatelessWidget {
   OutlineInputBorder _buildBorder(Color color) {
     return OutlineInputBorder(
       borderRadius: BorderRadius.circular(32.spMin),
-      borderSide: BorderSide(
-        color: color,
-        width: (borderWidth ?? 2).spMin,
-      ),
+      borderSide: BorderSide(color: color, width: (borderWidth ?? 2).spMin),
     );
   }
 

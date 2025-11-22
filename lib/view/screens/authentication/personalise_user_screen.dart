@@ -20,9 +20,7 @@ class PersonaliseUserScreen extends StatelessWidget {
               ),
             ),
           ),
-          SafeArea(
-            child: Container(),
-          ),
+          SafeArea(child: Container()),
         ],
       ),
     );
