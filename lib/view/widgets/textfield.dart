@@ -25,7 +25,7 @@ class AuthTextFormField extends StatelessWidget {
   final Iterable<String>? autofillHints;
   final int? maxLength;
 
-  AuthTextFormField({
+  const AuthTextFormField({
     super.key,
     required this.hintText,
     required this.controller,

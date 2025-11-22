@@ -13,7 +13,7 @@ class CustomButton extends StatelessWidget {
   final double? borderWidth;
   final bool enabled;
 
-  CustomButton({
+  const CustomButton({
     super.key,
     required this.text,
     this.onTap,
@@ -32,12 +32,12 @@ class CustomButton extends StatelessWidget {
       onTap: enabled ? onTap : null,
       child: Opacity(
         opacity: enabled ? 1.0 : 0.5,
-      child: Container(
-        width: width ?? double.infinity,
-        height: height.spMin,
-        decoration: BoxDecoration(
+        child: Container(
+          width: width ?? double.infinity,
+          height: height.spMin,
+          decoration: BoxDecoration(
             color: enabled ? color : greyColor,
-          borderRadius: BorderRadius.circular(borderRadius.spMin),
+            borderRadius: BorderRadius.circular(borderRadius.spMin),
           ),
           alignment: Alignment.center,
           child: text,
