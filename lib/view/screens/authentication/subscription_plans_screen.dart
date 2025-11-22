@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:jollycast/gen/assets.gen.dart';
 import 'package:jollycast/view/widgets/color.dart';
 import 'package:jollycast/view/widgets/text.dart';
+import 'package:jollycast/view/screens/main/main_screen.dart';
 
 class SubscriptionPlansScreen extends StatelessWidget {
   const SubscriptionPlansScreen({super.key});
@@ -134,37 +135,57 @@ class SubscriptionCard extends StatelessWidget {
             SizedBox(height: 36.spMin),
             Row(
               children: [
-                Container(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: 23.spMin,
-                    vertical: 16.spMin,
-                  ),
-                  decoration: BoxDecoration(
-                    color: darkGreyColor2,
-                    borderRadius: BorderRadius.circular(32.spMin),
-                  ),
-                  child: CustomTextWidget(
-                    text: 'One-time',
-                    fontSize: 18.spMin,
-                    color: whiteColor,
-                    fontWeight: FontWeight.w400,
+                GestureDetector(
+                  onTap: () {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const MainScreen(initialIndex: 0),
+                      ),
+                    );
+                  },
+                  child: Container(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 23.spMin,
+                      vertical: 16.spMin,
+                    ),
+                    decoration: BoxDecoration(
+                      color: darkGreyColor2,
+                      borderRadius: BorderRadius.circular(32.spMin),
+                    ),
+                    child: CustomTextWidget(
+                      text: 'One-time',
+                      fontSize: 18.spMin,
+                      color: whiteColor,
+                      fontWeight: FontWeight.w400,
+                    ),
                   ),
                 ),
                 SizedBox(width: 16.spMin),
-                Container(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: 23.spMin,
-                    vertical: 16.spMin,
-                  ),
-                  decoration: BoxDecoration(
-                    color: darkGreyColor2,
-                    borderRadius: BorderRadius.circular(32.spMin),
-                  ),
-                  child: CustomTextWidget(
-                    text: 'Auto-renewal',
-                    fontSize: 18.spMin,
-                    color: whiteColor,
-                    fontWeight: FontWeight.w400,
+                GestureDetector(
+                  onTap: () {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const MainScreen(initialIndex: 0),
+                      ),
+                    );
+                  },
+                  child: Container(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 23.spMin,
+                      vertical: 16.spMin,
+                    ),
+                    decoration: BoxDecoration(
+                      color: darkGreyColor2,
+                      borderRadius: BorderRadius.circular(32.spMin),
+                    ),
+                    child: CustomTextWidget(
+                      text: 'Auto-renewal',
+                      fontSize: 18.spMin,
+                      color: whiteColor,
+                      fontWeight: FontWeight.w400,
+                    ),
                   ),
                 ),
               ],
