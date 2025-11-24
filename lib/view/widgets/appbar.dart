@@ -2,12 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:jollycast/view/widgets/color.dart';
 
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
-  const CustomAppBar({
-    super.key,
-    this.title,
-    this.actions,
-    this.leading,
-  });
+  const CustomAppBar({super.key, this.title, this.actions, this.leading});
 
   final Widget? title;
   final List<Widget>? actions;
@@ -27,4 +22,3 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Size get preferredSize => Size.fromHeight(kToolbarHeight);
 }
-
