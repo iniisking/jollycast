@@ -28,3 +28,8 @@ final greyTextColor = const Color(0xFFA7A7A7);
 final descriptionTextColor = const Color(0xFFCECECE);
 
 final darkGreyColor3 = const Color(0xFF1F2727);
+final editorsPickGradientStart = const Color(0xFF142915);
+final editorsPickGradientEnd = const Color(0xFF468F49);
+final buttonGreyColor = const Color(0xFF585454);
+final topJollyCardColor = const Color(0xFF232020);
+final topJollyBorderColor = const Color(0x472F5A45);

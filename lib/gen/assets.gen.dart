@@ -28,6 +28,10 @@ class $AssetsImagesGen {
   AssetGenImage get cardImage1 =>
       const AssetGenImage('assets/images/card image 1.jpg');
 
+  /// File path: assets/images/editors pick image .jpg
+  AssetGenImage get editorsPickImage =>
+      const AssetGenImage('assets/images/editors pick image .jpg');
+
   /// File path: assets/images/fire.png
   AssetGenImage get fire => const AssetGenImage('assets/images/fire.png');
 
@@ -59,11 +63,16 @@ class $AssetsImagesGen {
   AssetGenImage get onboardingImage1 =>
       const AssetGenImage('assets/images/onboarding image 1.png');
 
+  /// File path: assets/images/top jolly image .jpg
+  AssetGenImage get topJollyImage =>
+      const AssetGenImage('assets/images/top jolly image .jpg');
+
   /// List of all assets
   List<dynamic> get values => [
     aGitkeep,
     accountSetUpBackground,
     cardImage1,
+    editorsPickImage,
     fire,
     headphone,
     logoOnboarding1,
@@ -72,6 +81,7 @@ class $AssetsImagesGen {
     logoOnboarding45,
     nigeriaFlagIcon,
     onboardingImage1,
+    topJollyImage,
   ];
 }
 

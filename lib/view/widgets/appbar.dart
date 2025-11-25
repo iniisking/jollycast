@@ -19,6 +19,13 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
         elevation: 0,
         automaticallyImplyLeading: false,
         leading: leading,
+        bottom: PreferredSize(
+          preferredSize: Size.fromHeight(0),
+          child: Padding(
+            padding: EdgeInsets.only(bottom: 8.spMin),
+            child: SizedBox.shrink(),
+          ),
+        ),
         title: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -30,7 +37,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
               height: 61.spMin,
               width: 161.spMin,
               decoration: BoxDecoration(
-                color: blackColor.withOpacity(0.8),
+                color: darkGreyColor3.withOpacity(0.6),
                 borderRadius: BorderRadius.circular(18.spMin),
               ),
               child: Row(
@@ -59,5 +66,5 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   }
 
   @override
-  Size get preferredSize => Size.fromHeight(kToolbarHeight);
+  Size get preferredSize => Size.fromHeight(kToolbarHeight + 3.spMin + 8.spMin);
 }
