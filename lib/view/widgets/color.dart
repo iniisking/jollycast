@@ -19,3 +19,12 @@ final blackColor3 = const Color(0xFF001010);
 final blackColor4 = const Color(0xFF1D1B1B);
 
 final lightGreyColor2 = const Color(0xFFA5A5A5);
+final darkGreenColor = const Color(0xFF152A16);
+
+final darkGreenColor2 = const Color(0xFF187635);
+
+final greyTextColor = const Color(0xFFA7A7A7);
+
+final descriptionTextColor = const Color(0xFFCECECE);
+
+final darkGreyColor3 = const Color(0xFF1F2727);

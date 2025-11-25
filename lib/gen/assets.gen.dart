@@ -24,6 +24,13 @@ class $AssetsImagesGen {
   AssetGenImage get accountSetUpBackground =>
       const AssetGenImage('assets/images/account set up background.jpg');
 
+  /// File path: assets/images/card image 1.jpg
+  AssetGenImage get cardImage1 =>
+      const AssetGenImage('assets/images/card image 1.jpg');
+
+  /// File path: assets/images/fire.png
+  AssetGenImage get fire => const AssetGenImage('assets/images/fire.png');
+
   /// File path: assets/images/headphone.png
   AssetGenImage get headphone =>
       const AssetGenImage('assets/images/headphone.png');
@@ -56,6 +63,8 @@ class $AssetsImagesGen {
   List<dynamic> get values => [
     aGitkeep,
     accountSetUpBackground,
+    cardImage1,
+    fire,
     headphone,
     logoOnboarding1,
     logoOnboarding2,
@@ -71,6 +80,9 @@ class $AssetsSvgGen {
 
   /// File path: assets/svg/.gitkeep
   String get aGitkeep => 'assets/svg/.gitkeep';
+
+  /// File path: assets/svg/add.svg
+  SvgGenImage get add => const SvgGenImage('assets/svg/add.svg');
 
   /// File path: assets/svg/avatar 1.svg
   SvgGenImage get avatar1 => const SvgGenImage('assets/svg/avatar 1.svg');
@@ -111,9 +123,26 @@ class $AssetsSvgGen {
   /// File path: assets/svg/library.svg
   SvgGenImage get library => const SvgGenImage('assets/svg/library.svg');
 
+  /// File path: assets/svg/notification.svg
+  SvgGenImage get notification =>
+      const SvgGenImage('assets/svg/notification.svg');
+
+  /// File path: assets/svg/purple star.svg
+  SvgGenImage get purpleStar => const SvgGenImage('assets/svg/purple star.svg');
+
+  /// File path: assets/svg/save.svg
+  SvgGenImage get save => const SvgGenImage('assets/svg/save.svg');
+
+  /// File path: assets/svg/search.svg
+  SvgGenImage get search => const SvgGenImage('assets/svg/search.svg');
+
+  /// File path: assets/svg/share.svg
+  SvgGenImage get share => const SvgGenImage('assets/svg/share.svg');
+
   /// List of all assets
   List<dynamic> get values => [
     aGitkeep,
+    add,
     avatar1,
     avatar2,
     avatar3,
@@ -127,6 +156,11 @@ class $AssetsSvgGen {
     discover,
     headphones,
     library,
+    notification,
+    purpleStar,
+    save,
+    search,
+    share,
   ];
 }
 
