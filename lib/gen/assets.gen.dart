@@ -137,6 +137,9 @@ class $AssetsSvgGen {
   SvgGenImage get notification =>
       const SvgGenImage('assets/svg/notification.svg');
 
+  /// File path: assets/svg/play icon.svg
+  SvgGenImage get playIcon => const SvgGenImage('assets/svg/play icon.svg');
+
   /// File path: assets/svg/purple star.svg
   SvgGenImage get purpleStar => const SvgGenImage('assets/svg/purple star.svg');
 
@@ -167,6 +170,7 @@ class $AssetsSvgGen {
     headphones,
     library,
     notification,
+    playIcon,
     purpleStar,
     save,
     search,

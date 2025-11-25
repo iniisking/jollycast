@@ -43,18 +43,12 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  Assets.svg.avatar1.svg(
-                    width: 45.spMin,
-                    height: 45.spMin,
-                  ),
+                  Assets.svg.avatar1.svg(width: 45.spMin, height: 45.spMin),
                   Assets.svg.notification.svg(
                     width: 27.spMin,
                     height: 27.spMin,
                   ),
-                  Assets.svg.search.svg(
-                    width: 21.spMin,
-                    height: 21.spMin,
-                  ),
+                  Assets.svg.search.svg(width: 21.spMin, height: 21.spMin),
                 ],
               ),
             ),

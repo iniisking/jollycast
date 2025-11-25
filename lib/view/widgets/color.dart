@@ -33,3 +33,5 @@ final editorsPickGradientEnd = const Color(0xFF468F49);
 final buttonGreyColor = const Color(0xFF585454);
 final topJollyCardColor = const Color(0xFF232020);
 final topJollyBorderColor = const Color(0x472F5A45);
+final playButtonGreen = const Color(0xFF20A726);
+final hashtagBackgroundColor = const Color(0xFF575757);

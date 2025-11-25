@@ -201,7 +201,10 @@ class TrendingCard extends StatelessWidget {
                           decoration: BoxDecoration(
                             color: primaryColor.withOpacity(0.7),
                             shape: BoxShape.circle,
-                            border: Border.all(color: whiteColor, width: 2.spMin),
+                            border: Border.all(
+                              color: whiteColor,
+                              width: 2.spMin,
+                            ),
                           ),
                           child: Icon(
                             Icons.play_arrow,
@@ -250,4 +253,3 @@ class TrendingCard extends StatelessWidget {
     );
   }
 }
-
