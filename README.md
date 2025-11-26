@@ -69,6 +69,7 @@ Jollycast is a podcast streaming application that allows users to discover, play
 - `intl` (^0.19.0) - Internationalization and date formatting
 - `logger` (^2.5.0) - Structured logging
 - `fluttertoast` (^8.2.12) - Toast notifications
+- `flutter_dotenv` (^5.1.0) - Environment variable management
 
 ### Development Tools
 
@@ -162,7 +163,24 @@ lib/
    flutter pub get
    ```
 
-3. **Generate asset references**
+3. **Configure environment variables**
+
+   Copy the example environment file and configure your API settings:
+
+   ```bash
+   cp .env.example .env
+   ```
+
+   Edit `.env` and update the following variables:
+
+   ```env
+   # API Configuration
+   API_BASE_URL=https://api.jollypodcast.net/api
+   ```
+
+   **Note**: The `.env` file is gitignored and will not be committed to version control. The `.env.example` file serves as a template for other developers.
+
+4. **Generate asset references**
 
    ```bash
    dart run build_runner build --delete-conflicting-outputs
@@ -174,7 +192,7 @@ lib/
    dart run build_runner watch
    ```
 
-4. **Run the application**
+5. **Run the application**
    ```bash
    flutter run
    ```
@@ -320,6 +338,56 @@ Consumer<AudioPlayerController>(
    - Clears all stored authentication data
    - Resets controllers to initial state
    - Redirects to login screen
+
+### Environment Variables
+
+The application uses `flutter_dotenv` to manage environment-specific configuration. This allows you to configure API endpoints and other settings without hardcoding them in the source code.
+
+#### Configuration Files
+
+1. **`.env`** (gitignored)
+
+   - Contains actual environment variables
+   - Should be created locally by copying `.env.example`
+   - Never committed to version control
+
+2. **`.env.example`** (committed)
+   - Template file showing required environment variables
+   - Serves as documentation for developers
+   - Safe to commit as it contains no sensitive data
+
+#### Available Variables
+
+- `API_BASE_URL`: Base URL for the API (default: `https://api.jollypodcast.net/api`)
+
+#### Usage in Code
+
+Environment variables are loaded in `main.dart`:
+
+```dart
+await dotenv.load(fileName: '.env');
+```
+
+Accessed in code via:
+
+```dart
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+
+String apiUrl = dotenv.env['API_BASE_URL'] ?? 'default_value';
+```
+
+The `ApiEndpoints` class uses environment variables:
+
+```dart
+static String get baseUrl => dotenv.env['API_BASE_URL'] ?? 'https://api.jollypodcast.net/api';
+```
+
+#### Setup for New Developers
+
+1. Clone the repository
+2. Copy `.env.example` to `.env`
+3. Update values in `.env` as needed
+4. Run the application
 
 ### Caching & Offline Mode
 

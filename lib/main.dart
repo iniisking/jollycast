@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:jollycast/core/provider/auth_controller.dart';
 import 'package:jollycast/core/provider/episodes_controller.dart';
 import 'package:jollycast/core/provider/audio_player_controller.dart';
@@ -11,6 +12,9 @@ import 'package:jollycast/core/services/connectivity_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Load environment variables
+  await dotenv.load(fileName: '.env');
 
   // Initialize cache service
   await CacheService.init();

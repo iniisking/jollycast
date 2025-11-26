@@ -1,15 +1,18 @@
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+
 class ApiEndpoints {
-  static const String baseUrl = 'https://api.jollypodcast.net/api';
+  static String get baseUrl =>
+      dotenv.env['API_BASE_URL'] ?? 'https://api.jollypodcast.net/api';
 
   // Auth endpoints
-  static const String login = '$baseUrl/auth/login';
+  static String get login => '$baseUrl/auth/login';
 
   // Episodes endpoints
   static String trendingEpisodes({int page = 1, int perPage = 1}) {
     return '$baseUrl/episodes/trending?page=$page&per_page=$perPage';
   }
 
-  static const String editorsPick = '$baseUrl/episodes/editor-pick';
+  static String get editorsPick => '$baseUrl/episodes/editor-pick';
 
   static String topJolly({int page = 1, int perPage = 1}) {
     return '$baseUrl/podcasts/top-jolly?page=$page&per_page=$perPage';
