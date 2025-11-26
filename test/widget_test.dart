@@ -10,15 +10,15 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:jollycast/main.dart';
 
 void main() {
-  testWidgets('App starts and shows RegisterPhoneScreen', (
+  testWidgets('App starts and shows LoginScreen', (
     WidgetTester tester,
   ) async {
     // Build our app and trigger a frame.
     await tester.pumpWidget(const MyApp());
     await tester.pumpAndSettle();
 
-    // Verify that the RegisterPhoneScreen is displayed
+    // Verify that the LoginScreen is displayed
     expect(find.text('PODCASTS FOR\nAFRICA, BY AFRICANS'), findsOneWidget);
-    expect(find.text('Continue'), findsOneWidget);
+    expect(find.text('Login'), findsOneWidget);
   });
 }
