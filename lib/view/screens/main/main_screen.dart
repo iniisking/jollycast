@@ -22,7 +22,7 @@ class _MainScreenState extends State<MainScreen> {
     _currentIndex = widget.initialIndex;
   }
 
-  final List<Widget> _screens = [
+  List<Widget> get _screens => [
     const DiscoverScreen(),
     const CategoriesScreen(),
     const LibraryScreen(),

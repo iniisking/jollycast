@@ -5,6 +5,7 @@ import 'package:jollycast/view/widgets/color.dart';
 import 'package:jollycast/view/widgets/text.dart';
 import 'package:jollycast/view/widgets/textfield.dart';
 import 'package:jollycast/view/screens/authentication/verify_phone_screen.dart';
+import 'package:jollycast/view/screens/authentication/login_screen.dart';
 import '../../../gen/assets.gen.dart';
 
 class RegisterPhoneScreen extends StatefulWidget {
@@ -175,6 +176,41 @@ class _RegisterPhoneScreenState extends State<RegisterPhoneScreen> {
                                   ),
                                 ),
                               ],
+                            ),
+                          ),
+                          SizedBox(height: 20.spMin),
+                          GestureDetector(
+                            onTap: () {
+                              Navigator.pushReplacement(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const LoginScreen(),
+                                ),
+                              );
+                            },
+                            child: RichText(
+                              textAlign: TextAlign.center,
+                              text: TextSpan(
+                                style: TextStyle(
+                                  fontFamily: 'Futura PT',
+                                  fontSize: 16.spMin,
+                                  color: whiteColor,
+                                  fontWeight: FontWeight.w400,
+                                ),
+                                children: [
+                                  const TextSpan(text: 'Have an account? '),
+                                  TextSpan(
+                                    text: 'Login',
+                                    style: TextStyle(
+                                      fontFamily: 'Futura PT',
+                                      fontSize: 16.spMin,
+                                      color: whiteColor,
+                                      fontWeight: FontWeight.w400,
+                                      decoration: TextDecoration.underline,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                           SizedBox(height: 55.spMin),

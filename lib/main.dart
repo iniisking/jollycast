@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:jollycast/view/screens/authentication/register_phone_screen.dart';
+import 'package:provider/provider.dart';
+import 'package:jollycast/core/provider/auth_controller.dart';
+import 'package:jollycast/core/provider/episodes_controller.dart';
+import 'package:jollycast/core/auth/auth_wrapper.dart';
 
 void main() {
   runApp(const MyApp());
@@ -18,14 +21,20 @@ class MyApp extends StatelessWidget {
       minTextAdapt: true,
       splitScreenMode: true,
       builder: (context, child) {
-        return MaterialApp(
-          debugShowCheckedModeBanner: false,
-          title: 'Jollycast',
-          theme: ThemeData(
-            textTheme: GoogleFonts.nunitoTextTheme(),
-            fontFamily: GoogleFonts.nunito().fontFamily,
+        return MultiProvider(
+          providers: [
+            ChangeNotifierProvider(create: (_) => AuthController()),
+            ChangeNotifierProvider(create: (_) => EpisodesController()),
+          ],
+          child: MaterialApp(
+            debugShowCheckedModeBanner: false,
+            title: 'Jollycast',
+            theme: ThemeData(
+              textTheme: GoogleFonts.nunitoTextTheme(),
+              fontFamily: GoogleFonts.nunito().fontFamily,
+            ),
+            home: const AuthWrapper(),
           ),
-          home: const RegisterPhoneScreen(),
         );
       },
     );

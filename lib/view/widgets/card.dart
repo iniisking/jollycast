@@ -40,19 +40,33 @@ class TrendingCard extends StatelessWidget {
           // Image fills entire card
           ClipRRect(
             borderRadius: BorderRadius.circular(12.spMin),
-            child: Image.asset(
-              imagePath,
-              height: 351.spMin,
-              width: 283.spMin,
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) {
-                return Container(
-                  height: 351.spMin,
-                  width: 283.spMin,
-                  color: darkGreyColor,
-                );
-              },
-            ),
+            child: imagePath.startsWith('http://') || imagePath.startsWith('https://')
+                ? Image.network(
+                    imagePath,
+                    height: 351.spMin,
+                    width: 283.spMin,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Container(
+                        height: 351.spMin,
+                        width: 283.spMin,
+                        color: darkGreyColor,
+                      );
+                    },
+                  )
+                : Image.asset(
+                    imagePath,
+                    height: 351.spMin,
+                    width: 283.spMin,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Container(
+                        height: 351.spMin,
+                        width: 283.spMin,
+                        color: darkGreyColor,
+                      );
+                    },
+                  ),
           ),
           // Gradient overlay at bottom
           Positioned(
@@ -180,19 +194,33 @@ class TrendingCard extends StatelessWidget {
                   child: Stack(
                     children: [
                       // Background image
-                      Image.asset(
-                        imagePath,
-                        width: 100.spMin,
-                        height: 100.spMin,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return Container(
-                            width: 100.spMin,
-                            height: 100.spMin,
-                            color: darkGreyColor,
-                          );
-                        },
-                      ),
+                      imagePath.startsWith('http://') || imagePath.startsWith('https://')
+                          ? Image.network(
+                              imagePath,
+                              width: 100.spMin,
+                              height: 100.spMin,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) {
+                                return Container(
+                                  width: 100.spMin,
+                                  height: 100.spMin,
+                                  color: darkGreyColor,
+                                );
+                              },
+                            )
+                          : Image.asset(
+                              imagePath,
+                              width: 100.spMin,
+                              height: 100.spMin,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) {
+                                return Container(
+                                  width: 100.spMin,
+                                  height: 100.spMin,
+                                  color: darkGreyColor,
+                                );
+                              },
+                            ),
                       // Centered play button
                       Center(
                         child: Container(
