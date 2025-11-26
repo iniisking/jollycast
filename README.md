@@ -22,6 +22,7 @@ Jollycast is a podcast streaming application that allows users to discover, play
 ## ✨ Features
 
 ### Core Features
+
 - **User Authentication**: Secure login with phone number and password, session persistence
 - **Discover Screen**: Browse trending episodes, editor's picks, top podcasts, latest episodes, and handpicked content
 - **Audio Player**: Full-featured audio player with play/pause, seek, rewind, and fast-forward controls
@@ -33,6 +34,7 @@ Jollycast is a podcast streaming application that allows users to discover, play
 - **Image Caching**: Automatic image caching for improved performance
 
 ### UI/UX Features
+
 - Responsive design using `flutter_screenutil`
 - Custom animations and transitions
 - Gradient backgrounds and blur effects
@@ -42,17 +44,19 @@ Jollycast is a podcast streaming application that allows users to discover, play
 ## 🛠 Tech Stack
 
 ### Core Dependencies
+
 - **Flutter SDK**: ^3.9.2
 - **State Management**: `provider` (^6.1.5+1)
 - **HTTP Client**: `http` (^1.3.0)
 - **Audio Playback**: `just_audio` (^0.10.5)
 - **Image Caching**: `cached_network_image` (^3.4.1)
-- **Local Storage**: 
+- **Local Storage**:
   - `shared_preferences` (^2.3.2) - User preferences
   - `flutter_secure_storage` (^9.2.2) - Secure token storage
   - `hive` (^2.2.3) + `hive_flutter` (^1.1.0) - Fast caching
 
 ### UI/UX Libraries
+
 - `flutter_screenutil` (^5.9.3) - Responsive sizing
 - `flutter_svg` (^2.0.17) - SVG support
 - `shimmer` (^3.0.0) - Loading animations
@@ -60,12 +64,14 @@ Jollycast is a podcast streaming application that allows users to discover, play
 - `google_fonts` (^6.2.1) - Custom typography
 
 ### Utilities
+
 - `connectivity_plus` (^6.1.0) - Network connectivity monitoring
 - `intl` (^0.19.0) - Internationalization and date formatting
 - `logger` (^2.5.0) - Structured logging
 - `fluttertoast` (^8.2.12) - Toast notifications
 
 ### Development Tools
+
 - `build_runner` (^2.4.14) - Code generation
 - `flutter_gen_runner` (^5.10.0) - Asset generation
 - `flutter_lints` (^5.0.0) - Linting rules
@@ -144,22 +150,26 @@ lib/
 ### Installation Steps
 
 1. **Clone the repository**
+
    ```bash
    git clone https://github.com/iniisking/jollycast.git
    cd jollycast
    ```
 
 2. **Install dependencies**
+
    ```bash
    flutter pub get
    ```
 
 3. **Generate asset references**
+
    ```bash
    dart run build_runner build --delete-conflicting-outputs
    ```
-   
+
    Or for automatic regeneration on asset changes:
+
    ```bash
    dart run build_runner watch
    ```
@@ -172,6 +182,7 @@ lib/
 ### Platform-Specific Setup
 
 #### iOS
+
 ```bash
 cd ios
 pod install
@@ -180,6 +191,7 @@ flutter run
 ```
 
 #### Android
+
 - Ensure Android SDK is properly configured
 - No additional setup required
 
@@ -206,6 +218,7 @@ dart fix --apply --code=unused_import
 ### Chosen Approach: Provider Pattern
 
 The project uses **Provider** as the state management solution, chosen for its:
+
 - Simplicity and ease of use
 - Built-in Flutter support
 - Good performance with selective rebuilds
@@ -216,18 +229,21 @@ The project uses **Provider** as the state management solution, chosen for its:
 #### Controllers (ChangeNotifier)
 
 1. **AuthController** (`lib/core/provider/auth_controller.dart`)
+
    - Manages user authentication state
    - Handles login/logout operations
    - Persists and restores user sessions
    - Manages authentication tokens
 
 2. **EpisodesController** (`lib/core/provider/episodes_controller.dart`)
+
    - Manages episode data (trending, editor's pick, latest, etc.)
    - Handles API calls for episode data
    - Manages loading and error states
    - Provides pagination support
 
 3. **AudioPlayerController** (`lib/core/provider/audio_player_controller.dart`)
+
    - Manages audio playback state
    - Controls play/pause/seek operations
    - Tracks playback position and duration
@@ -285,6 +301,7 @@ Consumer<AudioPlayerController>(
 ### Authentication Flow
 
 1. **Login Process**
+
    - User enters phone number and password
    - `AuthService.login()` makes API call
    - Token and user data stored securely
@@ -292,6 +309,7 @@ Consumer<AudioPlayerController>(
    - User redirected to main app
 
 2. **Session Restoration**
+
    - On app startup, `AuthController` attempts to restore session
    - Token loaded from `flutter_secure_storage`
    - User data loaded from `shared_preferences`
@@ -308,12 +326,14 @@ Consumer<AudioPlayerController>(
 #### Cache Service Architecture
 
 1. **CacheService** (`lib/core/services/cache_service.dart`)
+
    - Uses Hive for fast key-value storage
    - Caches API responses with expiration (24 hours default)
    - Generates cache keys from URL and query parameters
    - Automatically handles expired cache entries
 
 2. **API Service Integration**
+
    - `ApiService.get()` checks connectivity status
    - If offline: returns cached data if available
    - If online: makes API call and caches response
@@ -328,6 +348,7 @@ Consumer<AudioPlayerController>(
 #### Connectivity Monitoring
 
 1. **ConnectivityService**
+
    - Monitors network status using `connectivity_plus`
    - Detects WiFi, mobile data, ethernet connections
    - Notifies listeners of status changes
@@ -340,12 +361,14 @@ Consumer<AudioPlayerController>(
 ### Audio Playback
 
 1. **AudioPlayerController**
+
    - Uses `just_audio` package for smooth playback
    - Manages current episode, position, duration
    - Handles play/pause/seek operations
    - Listens to position and state streams
 
 2. **Player Screen**
+
    - Full-screen player with blurred background
    - Custom progress bar with gradient
    - Transport controls (rewind, play/pause, fast-forward)
@@ -362,22 +385,26 @@ Consumer<AudioPlayerController>(
 #### Reusable Components (DRY Principle)
 
 1. **SectionHeader**
+
    - Standardized section headers with icons
    - Consistent spacing and typography
    - Used throughout discover screen
 
 2. **SeeAllButton**
+
    - Standardized action buttons
    - Two variants: default (small) and large
    - Consistent styling and behavior
 
 3. **PlayButton**
+
    - Unified play/pause button
    - Automatic state detection
    - Multiple sizes (small, medium, large)
    - Integrated with AudioPlayerController
 
 4. **NavigationHelper**
+
    - Centralized navigation patterns
    - Slide-up transitions
    - Loading dialog management
@@ -390,11 +417,13 @@ Consumer<AudioPlayerController>(
 ### Error Handling
 
 1. **Error Parsing**
+
    - `ErrorParser` utility for consistent error message extraction
    - Handles various API error formats
    - Provides user-friendly error messages
 
 2. **Authentication Errors**
+
    - Custom `AuthenticationException` for 401 errors
    - Automatic logout on authentication failure
    - User redirected to login screen
@@ -416,12 +445,14 @@ Consumer<AudioPlayerController>(
 ### API Assumptions
 
 1. **Authentication**
+
    - API returns Bearer token format
    - Token is included in `Authorization` header
    - Token expiration handled server-side
    - 401 status code indicates authentication failure
 
 2. **Data Structure**
+
    - Episodes have consistent structure across endpoints
    - Pagination follows standard format (page, per_page)
    - Image URLs are always valid and accessible
@@ -435,11 +466,13 @@ Consumer<AudioPlayerController>(
 ### User Experience Assumptions
 
 1. **Offline Usage**
+
    - Users expect cached data when offline
    - Users understand "cached data" messaging
    - 24-hour cache expiration is acceptable
 
 2. **Audio Playback**
+
    - Users expect smooth audio playback
    - Background playback is acceptable
    - Playback state should persist across screens
@@ -452,11 +485,13 @@ Consumer<AudioPlayerController>(
 ### Technical Assumptions
 
 1. **Platform Support**
+
    - Primary focus on iOS and Android
    - Web and desktop support secondary
    - Minimum iOS 12+ and Android API 21+
 
 2. **Storage**
+
    - Secure storage available on all platforms
    - Sufficient storage space for cache
    - Cache can be cleared if needed
@@ -471,11 +506,13 @@ Consumer<AudioPlayerController>(
 ### Performance Optimizations
 
 1. **Image Optimization**
+
    - Implement image compression
    - Add progressive image loading
    - Optimize image sizes for different screen densities
 
 2. **Caching Improvements**
+
    - Implement cache size limits
    - Add cache eviction policies
    - Implement cache preloading for popular content
@@ -488,18 +525,21 @@ Consumer<AudioPlayerController>(
 ### Features
 
 1. **Playback Features**
+
    - Playback speed control (0.5x, 1x, 1.5x, 2x)
    - Sleep timer functionality
    - Queue management (play next, add to queue)
    - Playlist creation and management
 
 2. **Social Features**
+
    - Episode sharing
    - User reviews and ratings
    - Follow/unfollow podcasts
    - Social feed integration
 
 3. **Discovery**
+
    - Advanced search functionality
    - Category filtering
    - Personalized recommendations
@@ -514,12 +554,14 @@ Consumer<AudioPlayerController>(
 ### Code Quality
 
 1. **Testing**
+
    - Unit tests for controllers
    - Widget tests for components
    - Integration tests for critical flows
    - E2E tests for user journeys
 
 2. **Documentation**
+
    - API documentation
    - Component documentation
    - Architecture decision records
@@ -534,11 +576,13 @@ Consumer<AudioPlayerController>(
 ### Architecture
 
 1. **State Management**
+
    - Consider migrating to Riverpod for better testability
    - Implement state persistence
    - Add state debugging tools
 
 2. **Code Organization**
+
    - Implement feature-based folder structure
    - Add domain layer for business logic
    - Separate presentation and data layers
@@ -551,12 +595,14 @@ Consumer<AudioPlayerController>(
 ### UI/UX
 
 1. **Accessibility**
+
    - Add screen reader support
    - Improve color contrast
    - Add keyboard navigation
    - Implement accessibility labels
 
 2. **Animations**
+
    - Add more micro-interactions
    - Implement page transitions
    - Add loading animations
@@ -570,6 +616,7 @@ Consumer<AudioPlayerController>(
 ### Security
 
 1. **Data Protection**
+
    - Implement certificate pinning
    - Add biometric authentication
    - Encrypt sensitive data
@@ -584,6 +631,7 @@ Consumer<AudioPlayerController>(
 ### Monitoring & Analytics
 
 1. **Error Tracking**
+
    - Integrate crash reporting (Sentry, Firebase Crashlytics)
    - Add error analytics
    - Implement error recovery mechanisms
@@ -599,11 +647,13 @@ Consumer<AudioPlayerController>(
 ### Code Generation
 
 Generate asset references:
+
 ```bash
 dart run build_runner build --delete-conflicting-outputs
 ```
 
 Watch for changes:
+
 ```bash
 dart run build_runner watch
 ```
@@ -611,16 +661,19 @@ dart run build_runner watch
 ### Code Quality
 
 Format code:
+
 ```bash
 dart format .
 ```
 
 Fix linting issues:
+
 ```bash
 dart fix --apply
 ```
 
 Remove unused imports:
+
 ```bash
 dart fix --apply --code=unused_import
 ```
@@ -628,11 +681,13 @@ dart fix --apply --code=unused_import
 ### Running Tests
 
 Run all tests:
+
 ```bash
 flutter test
 ```
 
 Run with coverage:
+
 ```bash
 flutter test --coverage
 ```
@@ -640,11 +695,13 @@ flutter test --coverage
 ### Building
 
 Build APK:
+
 ```bash
 flutter build apk
 ```
 
 Build iOS:
+
 ```bash
 flutter build ios
 ```
@@ -655,7 +712,7 @@ This project is private and proprietary.
 
 ## 👥 Contributors
 
-- Development Team
+- IniOluwa Longe - Mobile Engineer (Flutter)
 
 ---
 
