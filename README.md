@@ -644,140 +644,131 @@ Consumer<AudioPlayerController>(
 
 ## 🔄 CI/CD
 
-### Current Status
+### Current Implementation
 
-CI/CD pipelines are **not currently configured** for this project. The following section outlines recommended CI/CD setup for future implementation.
+This project uses **GitHub Actions** for Continuous Integration and Continuous Deployment. The CI/CD pipelines are configured in `.github/workflows/`.
 
-### Recommended CI/CD Setup
+#### Workflow Files
 
-#### GitHub Actions Workflow
+1. **CI Workflow** (`.github/workflows/ci.yml`)
+   - **Triggers**: Runs on push to `main`, `master`, `develop` branches and on pull requests
+   - **Flutter Version**: 3.35.4 (stable channel)
+   - **Java Version**: 17 (Zulu distribution)
 
-A typical CI/CD pipeline for this Flutter project would include:
+2. **Release Workflow** (`.github/workflows/release.yml`)
+   - **Triggers**: Runs on version tags matching pattern `v*.*.*` (e.g., `v1.0.0`)
+   - **Flutter Version**: 3.35.4 (stable channel)
+   - **Java Version**: 17 (Zulu distribution)
 
-1. **Continuous Integration (CI)**
-   - Code formatting checks (`dart format --set-exit-if-changed .`)
-   - Linting (`dart fix --apply`)
-   - Unit tests (`flutter test`)
-   - Widget tests (`flutter test`)
-   - Build verification for Android (`flutter build apk`)
-   - Build verification for iOS (`flutter build ios --no-codesign`)
+#### CI Pipeline Jobs
 
-2. **Continuous Deployment (CD)**
-   - Automatic builds on version tags
-   - Distribution to TestFlight (iOS)
-   - Distribution to Firebase App Distribution or Google Play Internal Testing (Android)
-   - Automated release notes generation
+The CI workflow includes three jobs:
 
-#### Example GitHub Actions Workflow
+**1. Test & Analyze Job**
+- Code formatting verification (`dart format --output=none --set-exit-if-changed .`)
+- Static code analysis (`flutter analyze`)
+- Test execution with coverage (`flutter test --coverage`)
+- Coverage upload to Codecov
 
+**2. Build Android Job**
+- Builds Android APK (`flutter build apk --release`)
+- Builds Android App Bundle (`flutter build appbundle --release`)
+- Uploads APK and AAB artifacts (30-day retention)
+
+**3. Build iOS Job**
+- Builds iOS app (`flutter build ios --release --no-codesign`)
+- Uploads iOS build artifact (30-day retention)
+
+#### Release Pipeline
+
+The release workflow automatically:
+
+- **Builds Artifacts**
+  - Android APK
+  - Android App Bundle (AAB)
+  - Web build
+
+- **Creates GitHub Release**
+  - Extracts version from tag
+  - Attaches APK and AAB files
+  - Generates release notes automatically
+  - Publishes as non-draft, non-prerelease
+
+### Workflow Configuration Details
+
+#### CI Workflow Triggers
 ```yaml
-name: CI/CD Pipeline
-
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ master, main, develop ]
   pull_request:
-    branches: [ main ]
-  release:
-    types: [ created ]
-
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: subosito/flutter-action@v2
-        with:
-          flutter-version: '3.9.2'
-      - run: flutter pub get
-      - run: dart format --set-exit-if-changed .
-      - run: dart fix --apply
-      - run: flutter test --coverage
-      - uses: codecov/codecov-action@v3
-        with:
-          file: coverage/lcov.info
-
-  build-android:
-    needs: test
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: subosito/flutter-action@v2
-        with:
-          flutter-version: '3.9.2'
-      - run: flutter pub get
-      - run: flutter build apk --release
-      - uses: actions/upload-artifact@v3
-        with:
-          name: android-apk
-          path: build/app/outputs/flutter-apk/app-release.apk
-
-  build-ios:
-    needs: test
-    runs-on: macos-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: subosito/flutter-action@v2
-        with:
-          flutter-version: '3.9.2'
-      - run: flutter pub get
-      - run: flutter build ios --release --no-codesign
-      - uses: actions/upload-artifact@v3
-        with:
-          name: ios-build
-          path: build/ios/iphoneos/Runner.app
+    branches: [ master, main, develop ]
 ```
+
+#### Release Workflow Triggers
+```yaml
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+```
+
+### Viewing CI/CD Status
+
+- **GitHub Actions Tab**: View all workflow runs, logs, and artifacts
+- **Pull Requests**: See CI status directly on PRs
+- **Releases Page**: View release artifacts and notes
+- **Codecov**: Monitor test coverage trends
+
+### Creating a Release
+
+To trigger a release:
+
+```bash
+# Create and push a version tag
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+The release workflow will automatically:
+1. Build all platform artifacts
+2. Create a GitHub release
+3. Attach APK and AAB files
+4. Generate release notes
 
 ### CI/CD Best Practices
 
+The current setup follows these practices:
+
 1. **Automated Testing**
-   - Run tests on every pull request
-   - Require all tests to pass before merging
-   - Generate and track code coverage
+   - Tests run on every push and PR
+   - Coverage tracking with Codecov
+   - Formatting validation prevents unformatted code
 
-2. **Code Quality**
-   - Enforce code formatting standards
-   - Run static analysis tools
-   - Check for security vulnerabilities
+2. **Build Verification**
+   - Multi-platform builds (Android, iOS)
+   - Artifact retention for 30 days
+   - Build failures block merges
 
-3. **Build Verification**
-   - Verify builds succeed on all target platforms
-   - Test on multiple Flutter/Dart versions
-   - Validate asset generation
+3. **Release Automation**
+   - Semantic versioning via tags
+   - Automatic release note generation
+   - Artifact attachment for distribution
 
-4. **Deployment Automation**
-   - Automate version bumping
-   - Generate changelogs
-   - Tag releases automatically
-   - Distribute to test environments
+### Local CI/CD Testing
 
-### Future CI/CD Implementation
+To test workflows locally before pushing:
 
-When implementing CI/CD, consider:
+```bash
+# Install act (GitHub Actions local runner)
+brew install act  # macOS
 
-1. **Testing Strategy**
-   - Unit tests for business logic
-   - Widget tests for UI components
-   - Integration tests for critical flows
-   - Performance tests
+# Run CI workflow locally
+act push
 
-2. **Build Pipeline**
-   - Multi-platform builds (iOS, Android)
-   - Code signing automation
-   - App bundle/APK generation
-   - Version management
-
-3. **Deployment Strategy**
-   - Staging environment for testing
-   - Production deployment automation
-   - Rollback mechanisms
-   - Feature flags integration
-
-4. **Monitoring**
-   - Build status notifications
-   - Deployment tracking
-   - Error reporting integration
-   - Performance metrics
+# Run specific job
+act -j test
+```
 
 ## 💻 Development
 
