@@ -9,8 +9,10 @@ import 'package:jollycast/core/services/episodes_service.dart';
 import 'package:jollycast/utils/toast_infos.dart';
 import 'package:jollycast/utils/error_parser.dart';
 import 'package:jollycast/utils/logger.dart';
+import 'package:jollycast/utils/auth_exception.dart';
 
 class EpisodesController extends ChangeNotifier {
+  VoidCallback? _onAuthError;
   bool _isLoading = false;
   bool _isLoadingEditorsPick = false;
   bool _isLoadingTopJolly = false;
@@ -64,6 +66,11 @@ class EpisodesController extends ChangeNotifier {
   bool get hasMoreKeywordsPages =>
       _keywordsPagination != null && _keywordsPagination!.nextPageUrl != null;
 
+  // Set callback for handling authentication errors
+  void setAuthErrorHandler(VoidCallback onAuthError) {
+    _onAuthError = onAuthError;
+  }
+
   // Get trending episodes
   Future<bool> getTrendingEpisodes({
     int page = 1,
@@ -100,6 +107,11 @@ class EpisodesController extends ChangeNotifier {
     } catch (e, stackTrace) {
       _isLoading = false;
       notifyListeners();
+
+      if (e is AuthenticationException) {
+        _onAuthError?.call();
+        return false;
+      }
 
       final errorMessage = ErrorParser.extractErrorMessage(e);
       AppLogger.error('Failed to load trending episodes', e, stackTrace);
@@ -149,6 +161,11 @@ class EpisodesController extends ChangeNotifier {
       _isLoadingEditorsPick = false;
       notifyListeners();
 
+      if (e is AuthenticationException) {
+        _onAuthError?.call();
+        return false;
+      }
+
       final errorMessage = ErrorParser.extractErrorMessage(e);
       AppLogger.error('Failed to load editor\'s pick', e, stackTrace);
       toastError(msg: errorMessage);
@@ -190,6 +207,11 @@ class EpisodesController extends ChangeNotifier {
     } catch (e, stackTrace) {
       _isLoadingTopJolly = false;
       notifyListeners();
+
+      if (e is AuthenticationException) {
+        _onAuthError?.call();
+        return false;
+      }
 
       final errorMessage = ErrorParser.extractErrorMessage(e);
       AppLogger.error('Failed to load top jolly', e, stackTrace);
@@ -257,6 +279,11 @@ class EpisodesController extends ChangeNotifier {
       _isLoadingLatestEpisodes = false;
       notifyListeners();
 
+      if (e is AuthenticationException) {
+        _onAuthError?.call();
+        return false;
+      }
+
       final errorMessage = ErrorParser.extractErrorMessage(e);
       AppLogger.error('Failed to load latest episodes', e, stackTrace);
       toastError(msg: errorMessage);
@@ -310,6 +337,11 @@ class EpisodesController extends ChangeNotifier {
       _isLoadingHandpicked = false;
       notifyListeners();
 
+      if (e is AuthenticationException) {
+        _onAuthError?.call();
+        return false;
+      }
+
       final errorMessage = ErrorParser.extractErrorMessage(e);
       AppLogger.error('Failed to load handpicked episodes', e, stackTrace);
       toastError(msg: errorMessage);
@@ -351,6 +383,11 @@ class EpisodesController extends ChangeNotifier {
     } catch (e, stackTrace) {
       _isLoadingKeywords = false;
       notifyListeners();
+
+      if (e is AuthenticationException) {
+        _onAuthError?.call();
+        return false;
+      }
 
       final errorMessage = ErrorParser.extractErrorMessage(e);
       AppLogger.error('Failed to load keywords', e, stackTrace);
@@ -401,6 +438,11 @@ class EpisodesController extends ChangeNotifier {
     } catch (e, stackTrace) {
       _isLoadingEpisode = false;
       notifyListeners();
+
+      if (e is AuthenticationException) {
+        _onAuthError?.call();
+        return null;
+      }
 
       final errorMessage = ErrorParser.extractErrorMessage(e);
       AppLogger.error('Failed to load episode $id', e, stackTrace);

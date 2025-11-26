@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
 import 'package:liquid_pull_to_refresh/liquid_pull_to_refresh.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:jollycast/gen/assets.gen.dart';
 import 'package:jollycast/view/widgets/color.dart';
 import 'package:jollycast/view/widgets/appbar.dart';
@@ -9,6 +10,7 @@ import 'package:jollycast/view/widgets/text.dart';
 import 'package:jollycast/view/widgets/card.dart';
 import 'package:jollycast/core/provider/episodes_controller.dart';
 import 'package:jollycast/core/provider/auth_controller.dart';
+import 'package:jollycast/core/provider/audio_player_controller.dart';
 import 'package:intl/intl.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:jollycast/core/model/episodes/get_trending_model.dart';
@@ -26,7 +28,20 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      _setupAuthErrorHandler();
       _loadData();
+    });
+  }
+
+  void _setupAuthErrorHandler() {
+    if (!mounted) return;
+    final episodesController = Provider.of<EpisodesController>(
+      context,
+      listen: false,
+    );
+    final authController = Provider.of<AuthController>(context, listen: false);
+    episodesController.setAuthErrorHandler(() {
+      authController.logout();
     });
   }
 
@@ -82,6 +97,10 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
       context,
       listen: false,
     );
+    final audioController = Provider.of<AudioPlayerController>(
+      context,
+      listen: false,
+    );
     final authToken = Provider.of<AuthController>(context, listen: false).token;
 
     showDialog(
@@ -104,16 +123,17 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
 
     if (!mounted) return;
 
-    if (detailed == null) {
-      detailed = episode;
-    }
+    final episodeToPlay = detailed ?? episode;
+
+    // Start playing the episode
+    await audioController.playEpisode(episodeToPlay);
 
     Navigator.of(context).push(
       PageRouteBuilder(
         transitionDuration: const Duration(milliseconds: 350),
         pageBuilder: (_, animation, __) => FadeTransition(
           opacity: animation,
-          child: PlayerScreen(episode: detailed!),
+          child: PlayerScreen(episode: episodeToPlay),
         ),
         transitionsBuilder: (_, animation, __, child) {
           final offsetAnimation = Tween<Offset>(
@@ -179,19 +199,34 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                             itemBuilder: (context, index) {
                               final episode =
                                   episodesController.trendingEpisodes[index];
-                              return GestureDetector(
-                                onTap: () => _openPlayerScreen(episode),
-                                child: TrendingCard(
-                                  imagePath: episode.pictureUrl,
-                                  podcastName: episode.podcast.title,
-                                  episodeTitle: episode.title.length > 30
-                                      ? '${episode.title.substring(0, 30)}...'
-                                      : episode.title,
-                                  description: episode.description.length > 100
-                                      ? '${episode.description.substring(0, 100)}...'
-                                      : episode.description,
-                                  onPlay: () => _openPlayerScreen(episode),
-                                ),
+                              return Consumer<AudioPlayerController>(
+                                builder: (context, audioController, child) {
+                                  return GestureDetector(
+                                    onTap: () => _openPlayerScreen(episode),
+                                    child: TrendingCard(
+                                      imagePath: episode.pictureUrl,
+                                      podcastName: episode.podcast.title,
+                                      episodeTitle: episode.title.length > 30
+                                          ? '${episode.title.substring(0, 30)}...'
+                                          : episode.title,
+                                      description:
+                                          episode.description.length > 100
+                                          ? '${episode.description.substring(0, 100)}...'
+                                          : episode.description,
+                                      episodeId: episode.id,
+                                      onPlay: () {
+                                        if (audioController
+                                                .currentEpisode
+                                                ?.id ==
+                                            episode.id) {
+                                          audioController.togglePlayPause();
+                                        } else {
+                                          _openPlayerScreen(episode);
+                                        }
+                                      },
+                                    ),
+                                  );
+                                },
                               );
                             },
                           ),
@@ -395,60 +430,111 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                                                           BorderRadius.circular(
                                                             5.spMin,
                                                           ),
-                                                      child: Image.network(
-                                                        episode.pictureUrl,
+                                                      child: CachedNetworkImage(
+                                                        imageUrl:
+                                                            episode.pictureUrl,
                                                         width: 79.spMin,
                                                         height:
                                                             79.79798126220703
                                                                 .spMin,
                                                         fit: BoxFit.cover,
-                                                        errorBuilder:
+                                                        placeholder:
                                                             (
                                                               context,
-                                                              error,
-                                                              stackTrace,
-                                                            ) {
-                                                              return Container(
-                                                                width: 79.spMin,
-                                                                height:
-                                                                    79.79798126220703
-                                                                        .spMin,
-                                                                color:
-                                                                    darkGreyColor,
-                                                                child: Icon(
-                                                                  Icons
-                                                                      .image_not_supported,
-                                                                  color:
-                                                                      greyTextColor,
-                                                                  size:
-                                                                      20.spMin,
-                                                                ),
-                                                              );
-                                                            },
+                                                              url,
+                                                            ) => Container(
+                                                              width: 79.spMin,
+                                                              height:
+                                                                  79.79798126220703
+                                                                      .spMin,
+                                                              color:
+                                                                  darkGreyColor,
+                                                            ),
+                                                        errorWidget: (context, url, error) {
+                                                          return Container(
+                                                            width: 79.spMin,
+                                                            height:
+                                                                79.79798126220703
+                                                                    .spMin,
+                                                            color:
+                                                                darkGreyColor,
+                                                            child: Icon(
+                                                              Icons
+                                                                  .image_not_supported,
+                                                              color:
+                                                                  greyTextColor,
+                                                              size: 20.spMin,
+                                                            ),
+                                                          );
+                                                        },
                                                       ),
                                                     ),
                                                     Center(
-                                                      child: Container(
-                                                        width: 35.54999923706055
-                                                            .spMin,
-                                                        height:
-                                                            35.90909194946289
-                                                                .spMin,
-                                                        decoration: BoxDecoration(
-                                                          color: primaryColor
-                                                              .withOpacity(0.7),
-                                                          shape:
-                                                              BoxShape.circle,
-                                                          border: Border.all(
-                                                            color: whiteColor,
-                                                            width: 2.spMin,
-                                                          ),
-                                                        ),
-                                                        child: Icon(
-                                                          Icons.play_arrow,
-                                                          color: whiteColor,
-                                                          size: 20.spMin,
-                                                        ),
+                                                      child: Consumer<AudioPlayerController>(
+                                                        builder:
+                                                            (
+                                                              context,
+                                                              audioController,
+                                                              child,
+                                                            ) {
+                                                              final isPlaying =
+                                                                  audioController
+                                                                          .currentEpisode
+                                                                          ?.id ==
+                                                                      episode
+                                                                          .id &&
+                                                                  audioController
+                                                                      .isPlaying;
+                                                              return GestureDetector(
+                                                                onTap: () {
+                                                                  if (audioController
+                                                                          .currentEpisode
+                                                                          ?.id ==
+                                                                      episode
+                                                                          .id) {
+                                                                    audioController
+                                                                        .togglePlayPause();
+                                                                  } else {
+                                                                    _openPlayerScreen(
+                                                                      episode,
+                                                                    );
+                                                                  }
+                                                                },
+                                                                child: Container(
+                                                                  width:
+                                                                      35.54999923706055
+                                                                          .spMin,
+                                                                  height:
+                                                                      35.90909194946289
+                                                                          .spMin,
+                                                                  decoration: BoxDecoration(
+                                                                    color: primaryColor
+                                                                        .withOpacity(
+                                                                          0.7,
+                                                                        ),
+                                                                    shape: BoxShape
+                                                                        .circle,
+                                                                    border: Border.all(
+                                                                      color:
+                                                                          whiteColor,
+                                                                      width: 2
+                                                                          .spMin,
+                                                                    ),
+                                                                  ),
+                                                                  child: Icon(
+                                                                    isPlaying
+                                                                        ? Icons
+                                                                              .pause
+                                                                        : Icons
+                                                                              .play_arrow,
+                                                                    color:
+                                                                        whiteColor,
+                                                                    size: 20
+                                                                        .spMin,
+                                                                  ),
+                                                                ),
+                                                              );
+                                                            },
                                                       ),
                                                     ),
                                                   ],
@@ -745,17 +831,20 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                                                   BorderRadius.circular(
                                                     8.spMin,
                                                   ),
-                                              child: Image.network(
-                                                episode.podcast.pictureUrl,
+                                              child: CachedNetworkImage(
+                                                imageUrl:
+                                                    episode.podcast.pictureUrl,
                                                 width: 278.spMin,
                                                 height: 237.spMin,
                                                 fit: BoxFit.cover,
-                                                errorBuilder:
-                                                    (
-                                                      context,
-                                                      error,
-                                                      stackTrace,
-                                                    ) {
+                                                placeholder: (context, url) =>
+                                                    Container(
+                                                      width: 278.spMin,
+                                                      height: 237.spMin,
+                                                      color: darkGreyColor,
+                                                    ),
+                                                errorWidget:
+                                                    (context, url, error) {
                                                       return Container(
                                                         width: 278.spMin,
                                                         height: 237.spMin,
@@ -854,45 +943,75 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                                               ),
                                               SizedBox(width: 13.spMin),
                                               // Play button
-                                              Container(
-                                                width: 78.5.spMin,
-                                                height: 30.spMin,
-                                                decoration: BoxDecoration(
-                                                  color: playButtonGreen,
-                                                  borderRadius:
-                                                      BorderRadius.circular(
-                                                        18.spMin,
-                                                      ),
-                                                ),
-                                                child: Padding(
-                                                  padding: EdgeInsets.all(
-                                                    6.spMin,
-                                                  ),
-                                                  child: Row(
-                                                    mainAxisAlignment:
-                                                        MainAxisAlignment
-                                                            .center,
-                                                    children: [
-                                                      Assets.svg.playIcon.svg(
-                                                        width: 18.spMin,
-                                                        height: 18.spMin,
-                                                        colorFilter:
-                                                            ColorFilter.mode(
-                                                              whiteColor,
-                                                              BlendMode.srcIn,
+                                              Consumer<AudioPlayerController>(
+                                                builder: (context, audioController, child) {
+                                                  final isPlaying =
+                                                      audioController
+                                                              .currentEpisode
+                                                              ?.id ==
+                                                          episode.id &&
+                                                      audioController.isPlaying;
+                                                  return GestureDetector(
+                                                    onTap: () {
+                                                      if (audioController
+                                                              .currentEpisode
+                                                              ?.id ==
+                                                          episode.id) {
+                                                        audioController
+                                                            .togglePlayPause();
+                                                      } else {
+                                                        _openPlayerScreen(
+                                                          episode,
+                                                        );
+                                                      }
+                                                    },
+                                                    child: Container(
+                                                      width: 78.5.spMin,
+                                                      height: 30.spMin,
+                                                      decoration: BoxDecoration(
+                                                        color: playButtonGreen,
+                                                        borderRadius:
+                                                            BorderRadius.circular(
+                                                              18.spMin,
                                                             ),
                                                       ),
-                                                      SizedBox(width: 4.spMin),
-                                                      CustomTextWidget(
-                                                        text: 'Play',
-                                                        fontSize: 13,
-                                                        color: whiteColor,
-                                                        fontWeight:
-                                                            FontWeight.w700,
+                                                      child: Padding(
+                                                        padding: EdgeInsets.all(
+                                                          6.spMin,
+                                                        ),
+                                                        child: Row(
+                                                          mainAxisAlignment:
+                                                              MainAxisAlignment
+                                                                  .center,
+                                                          children: [
+                                                            Icon(
+                                                              isPlaying
+                                                                  ? Icons
+                                                                        .pause_rounded
+                                                                  : Icons
+                                                                        .play_arrow_rounded,
+                                                              color: whiteColor,
+                                                              size: 18.spMin,
+                                                            ),
+                                                            SizedBox(
+                                                              width: 4.spMin,
+                                                            ),
+                                                            CustomTextWidget(
+                                                              text: isPlaying
+                                                                  ? 'Pause'
+                                                                  : 'Play',
+                                                              fontSize: 13,
+                                                              color: whiteColor,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w700,
+                                                            ),
+                                                          ],
+                                                        ),
                                                       ),
-                                                    ],
-                                                  ),
-                                                ),
+                                                    ),
+                                                  );
+                                                },
                                               ),
                                               SizedBox(width: 26.spMin),
                                               // Episodes count - placeholder since we don't have this data
@@ -1041,12 +1160,17 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
             // Image
             ClipRRect(
               borderRadius: BorderRadius.circular(8.spMin),
-              child: Image.network(
-                podcast.pictureUrl,
+              child: CachedNetworkImage(
+                imageUrl: podcast.pictureUrl,
                 height: 133.spMin,
                 width: double.infinity,
                 fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
+                placeholder: (context, url) => Container(
+                  height: 133.spMin,
+                  width: double.infinity,
+                  color: darkGreyColor,
+                ),
+                errorWidget: (context, url, error) {
                   return Container(
                     height: 133.spMin,
                     width: double.infinity,
@@ -1170,12 +1294,17 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                   children: [
                     ClipRRect(
                       borderRadius: BorderRadius.circular(8.spMin),
-                      child: Image.network(
-                        episode.pictureUrl,
+                      child: CachedNetworkImage(
+                        imageUrl: episode.pictureUrl,
                         width: 192.spMin,
                         height: 192.spMin,
                         fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
+                        placeholder: (context, url) => Container(
+                          width: 192.spMin,
+                          height: 192.spMin,
+                          color: darkGreyColor,
+                        ),
+                        errorWidget: (context, url, error) {
                           return Container(
                             width: 192.spMin,
                             height: 192.spMin,
@@ -1190,19 +1319,40 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                       ),
                     ),
                     Center(
-                      child: Container(
-                        width: 48.spMin,
-                        height: 48.spMin,
-                        decoration: BoxDecoration(
-                          color: primaryColor.withOpacity(0.7),
-                          shape: BoxShape.circle,
-                          border: Border.all(color: whiteColor, width: 2.spMin),
-                        ),
-                        child: Icon(
-                          Icons.play_arrow,
-                          color: whiteColor,
-                          size: 26.spMin,
-                        ),
+                      child: Consumer<AudioPlayerController>(
+                        builder: (context, audioController, child) {
+                          final isPlaying =
+                              audioController.currentEpisode?.id ==
+                                  episode.id &&
+                              audioController.isPlaying;
+                          return GestureDetector(
+                            onTap: () {
+                              if (audioController.currentEpisode?.id ==
+                                  episode.id) {
+                                audioController.togglePlayPause();
+                              } else {
+                                _openPlayerScreen(episode);
+                              }
+                            },
+                            child: Container(
+                              width: 48.spMin,
+                              height: 48.spMin,
+                              decoration: BoxDecoration(
+                                color: primaryColor.withOpacity(0.7),
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: whiteColor,
+                                  width: 2.spMin,
+                                ),
+                              ),
+                              child: Icon(
+                                isPlaying ? Icons.pause : Icons.play_arrow,
+                                color: whiteColor,
+                                size: 26.spMin,
+                              ),
+                            ),
+                          );
+                        },
                       ),
                     ),
                   ],

@@ -1,14 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:provider/provider.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:jollycast/gen/assets.gen.dart';
 import 'package:jollycast/view/widgets/color.dart';
 import 'package:jollycast/view/widgets/text.dart';
+import 'package:jollycast/core/provider/audio_player_controller.dart';
 
 class TrendingCard extends StatelessWidget {
   final String imagePath;
   final String podcastName;
   final String episodeTitle;
   final String description;
+  final int? episodeId;
   final VoidCallback? onPlay;
   final VoidCallback? onLike;
   final VoidCallback? onSave;
@@ -21,6 +25,7 @@ class TrendingCard extends StatelessWidget {
     required this.podcastName,
     required this.episodeTitle,
     required this.description,
+    this.episodeId,
     this.onPlay,
     this.onLike,
     this.onSave,
@@ -43,18 +48,23 @@ class TrendingCard extends StatelessWidget {
             child:
                 imagePath.startsWith('http://') ||
                     imagePath.startsWith('https://')
-                ? Image.network(
-                    imagePath,
+                ? CachedNetworkImage(
+                    imageUrl: imagePath,
                     height: 351.spMin,
                     width: 283.spMin,
                     fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
+                    errorWidget: (context, url, error) {
                       return Container(
                         height: 351.spMin,
                         width: 283.spMin,
                         color: darkGreyColor,
                       );
                     },
+                    placeholder: (context, url) => Container(
+                      height: 351.spMin,
+                      width: 283.spMin,
+                      color: darkGreyColor,
+                    ),
                   )
                 : Image.asset(
                     imagePath,
@@ -198,18 +208,23 @@ class TrendingCard extends StatelessWidget {
                       // Background image
                       imagePath.startsWith('http://') ||
                               imagePath.startsWith('https://')
-                          ? Image.network(
-                              imagePath,
+                          ? CachedNetworkImage(
+                              imageUrl: imagePath,
                               width: 100.spMin,
                               height: 100.spMin,
                               fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) {
+                              errorWidget: (context, url, error) {
                                 return Container(
                                   width: 100.spMin,
                                   height: 100.spMin,
                                   color: darkGreyColor,
                                 );
                               },
+                              placeholder: (context, url) => Container(
+                                width: 100.spMin,
+                                height: 100.spMin,
+                                color: darkGreyColor,
+                              ),
                             )
                           : Image.asset(
                               imagePath,
@@ -226,22 +241,31 @@ class TrendingCard extends StatelessWidget {
                             ),
                       // Centered play button
                       Center(
-                        child: Container(
-                          width: 45.spMin,
-                          height: 45.spMin,
-                          decoration: BoxDecoration(
-                            color: primaryColor.withOpacity(0.7),
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: whiteColor,
-                              width: 2.spMin,
-                            ),
-                          ),
-                          child: Icon(
-                            Icons.play_arrow,
-                            color: whiteColor,
-                            size: 26.spMin,
-                          ),
+                        child: Consumer<AudioPlayerController>(
+                          builder: (context, audioController, child) {
+                            final isPlaying =
+                                episodeId != null &&
+                                audioController.currentEpisode?.id ==
+                                    episodeId &&
+                                audioController.isPlaying;
+                            return Container(
+                              width: 45.spMin,
+                              height: 45.spMin,
+                              decoration: BoxDecoration(
+                                color: primaryColor.withOpacity(0.7),
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: whiteColor,
+                                  width: 2.spMin,
+                                ),
+                              ),
+                              child: Icon(
+                                isPlaying ? Icons.pause : Icons.play_arrow,
+                                color: whiteColor,
+                                size: 26.spMin,
+                              ),
+                            );
+                          },
                         ),
                       ),
                     ],

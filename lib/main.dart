@@ -6,9 +6,15 @@ import 'package:jollycast/core/provider/auth_controller.dart';
 import 'package:jollycast/core/provider/episodes_controller.dart';
 import 'package:jollycast/core/provider/audio_player_controller.dart';
 import 'package:jollycast/core/auth/auth_wrapper.dart';
+import 'package:jollycast/core/services/cache_service.dart';
+import 'package:jollycast/core/services/connectivity_service.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize cache service
+  await CacheService.init();
+
   runApp(const MyApp());
 }
 
@@ -25,6 +31,7 @@ class MyApp extends StatelessWidget {
       builder: (context, child) {
         return MultiProvider(
           providers: [
+            ChangeNotifierProvider(create: (_) => ConnectivityService()),
             ChangeNotifierProvider(create: (_) => AuthController()),
             ChangeNotifierProvider(create: (_) => EpisodesController()),
             ChangeNotifierProvider(create: (_) => AudioPlayerController()),

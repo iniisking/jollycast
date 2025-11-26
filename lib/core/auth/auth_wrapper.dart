@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:jollycast/core/provider/auth_controller.dart';
+import 'package:jollycast/core/services/connectivity_service.dart';
+import 'package:jollycast/core/services/api_service.dart';
 import 'package:jollycast/view/screens/authentication/login_screen.dart';
 import 'package:jollycast/view/screens/main/main_screen.dart';
 
@@ -9,6 +11,13 @@ class AuthWrapper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Initialize ApiService with ConnectivityService
+    final connectivityService = Provider.of<ConnectivityService>(
+      context,
+      listen: false,
+    );
+    ApiService.setConnectivityService(connectivityService);
+
     return Consumer<AuthController>(
       builder: (context, authController, child) {
         if (authController.isRestoringSession) {

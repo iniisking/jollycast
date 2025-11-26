@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:jollycast/core/model/episodes/get_trending_model.dart';
 import 'package:jollycast/core/provider/audio_player_controller.dart';
 import 'package:jollycast/view/widgets/color.dart';
@@ -199,15 +200,20 @@ class _Artwork extends StatelessWidget {
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(12.spMin),
-        child: Image.network(
-          episode.pictureUrl,
+        child: CachedNetworkImage(
+          imageUrl: episode.pictureUrl,
           width: 321.spMin,
           height: 321.spMin,
           fit: BoxFit.cover,
-          errorBuilder: (_, __, ___) => Container(
+          errorWidget: (_, __, ___) => Container(
             color: Colors.black26,
             alignment: Alignment.center,
             child: Icon(Icons.music_note, color: whiteColor, size: 42.spMin),
+          ),
+          placeholder: (_, __) => Container(
+            color: Colors.black26,
+            alignment: Alignment.center,
+            child: CircularProgressIndicator(color: primaryColor),
           ),
         ),
       ),

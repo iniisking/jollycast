@@ -9,6 +9,7 @@ import 'package:jollycast/core/model/episodes/keywords_model.dart';
 import 'package:jollycast/core/services/api_service.dart';
 import 'package:jollycast/utils/error_parser.dart';
 import 'package:jollycast/utils/logger.dart';
+import 'package:jollycast/utils/auth_exception.dart';
 
 class EpisodesService {
   // Helper method to build headers with authorization
@@ -23,6 +24,14 @@ class EpisodesService {
     return headers;
   }
 
+  // Helper method to check for authentication errors
+  static void _checkAuthError(int statusCode, String body) {
+    if (statusCode == ApiService.statusUnauthorized) {
+      final errorMessage = ErrorParser.parseErrorResponse(body);
+      throw AuthenticationException(errorMessage);
+    }
+  }
+
   // Get trending episodes
   static Future<GetTrendingRes> getTrendingEpisodes({
     int page = 1,
@@ -34,6 +43,8 @@ class EpisodesService {
         ApiEndpoints.trendingEpisodes(page: page, perPage: perPage),
         headers: _buildHeaders(token: token),
       );
+
+      _checkAuthError(response.statusCode, response.body);
 
       if (ApiService.isSuccess(response.statusCode)) {
         final jsonData = jsonDecode(response.body) as Map<String, dynamic>;
@@ -124,6 +135,8 @@ class EpisodesService {
         headers: _buildHeaders(token: token),
       );
 
+      _checkAuthError(response.statusCode, response.body);
+
       if (ApiService.isSuccess(response.statusCode)) {
         final jsonData = jsonDecode(response.body) as Map<String, dynamic>;
         AppLogger.info('Episode $id fetched successfully');
@@ -191,6 +204,8 @@ class EpisodesService {
         ApiEndpoints.editorsPick,
         headers: _buildHeaders(token: token),
       );
+
+      _checkAuthError(response.statusCode, response.body);
 
       if (ApiService.isSuccess(response.statusCode)) {
         final jsonData = jsonDecode(response.body) as Map<String, dynamic>;
@@ -289,6 +304,8 @@ class EpisodesService {
         headers: _buildHeaders(token: token),
       );
 
+      _checkAuthError(response.statusCode, response.body);
+
       if (ApiService.isSuccess(response.statusCode)) {
         final jsonData = jsonDecode(response.body) as Map<String, dynamic>;
         AppLogger.info('Top jolly fetched successfully');
@@ -376,6 +393,8 @@ class EpisodesService {
         headers: _buildHeaders(token: token),
       );
 
+      _checkAuthError(response.statusCode, response.body);
+
       if (ApiService.isSuccess(response.statusCode)) {
         final jsonData = jsonDecode(response.body) as Map<String, dynamic>;
         AppLogger.info('Latest episodes fetched successfully');
@@ -418,6 +437,8 @@ class EpisodesService {
         ApiEndpoints.handpicked(amount: amount),
         headers: _buildHeaders(token: token),
       );
+
+      _checkAuthError(response.statusCode, response.body);
 
       if (ApiService.isSuccess(response.statusCode)) {
         final jsonData = jsonDecode(response.body) as Map<String, dynamic>;
@@ -462,6 +483,8 @@ class EpisodesService {
         ApiEndpoints.keywords(page: page, perPage: perPage),
         headers: _buildHeaders(token: token),
       );
+
+      _checkAuthError(response.statusCode, response.body);
 
       if (ApiService.isSuccess(response.statusCode)) {
         final jsonData = jsonDecode(response.body) as Map<String, dynamic>;
