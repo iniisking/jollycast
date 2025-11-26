@@ -25,7 +25,10 @@ class AuthService {
         return _parseLoginResponse(jsonData);
       } else {
         final errorMessage = ErrorParser.parseErrorResponse(response.body);
-        AppLogger.error('Login failed', 'Status: ${response.statusCode}, Body: ${response.body}');
+        AppLogger.error(
+          'Login failed',
+          'Status: ${response.statusCode}, Body: ${response.body}',
+        );
         throw Exception(errorMessage);
       }
     } catch (e) {
@@ -100,4 +103,3 @@ class AuthService {
     );
   }
 }
-

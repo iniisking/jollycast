@@ -40,7 +40,9 @@ class TrendingCard extends StatelessWidget {
           // Image fills entire card
           ClipRRect(
             borderRadius: BorderRadius.circular(12.spMin),
-            child: imagePath.startsWith('http://') || imagePath.startsWith('https://')
+            child:
+                imagePath.startsWith('http://') ||
+                    imagePath.startsWith('https://')
                 ? Image.network(
                     imagePath,
                     height: 351.spMin,
@@ -194,7 +196,8 @@ class TrendingCard extends StatelessWidget {
                   child: Stack(
                     children: [
                       // Background image
-                      imagePath.startsWith('http://') || imagePath.startsWith('https://')
+                      imagePath.startsWith('http://') ||
+                              imagePath.startsWith('https://')
                           ? Image.network(
                               imagePath,
                               width: 100.spMin,

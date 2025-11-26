@@ -13,8 +13,11 @@ class ApiService {
     try {
       final uri = Uri.parse(url);
       final finalUri = queryParameters != null
-          ? uri.replace(queryParameters: queryParameters.map(
-              (key, value) => MapEntry(key, value.toString())))
+          ? uri.replace(
+              queryParameters: queryParameters.map(
+                (key, value) => MapEntry(key, value.toString()),
+              ),
+            )
           : uri;
 
       final response = await http
@@ -59,12 +62,7 @@ class ApiService {
   }) async {
     try {
       final response = await http
-          .put(
-            Uri.parse(url),
-            headers: headers,
-            body: body,
-            encoding: encoding,
-          )
+          .put(Uri.parse(url), headers: headers, body: body, encoding: encoding)
           .timeout(_timeout);
 
       return response;
@@ -153,4 +151,3 @@ class ApiService {
   static const int statusServiceUnavailable = 503;
   static const int statusGatewayTimeout = 504;
 }
-

@@ -15,7 +15,7 @@ class ErrorParser {
           final jsonString = errorString.substring(jsonStart, jsonEnd);
           try {
             final json = jsonDecode(jsonString) as Map<String, dynamic>;
-            
+
             // Try common error message fields
             if (json.containsKey('message')) {
               return json['message'] as String;
@@ -51,7 +51,9 @@ class ErrorParser {
       }
 
       // Try to extract message from common error patterns
-      final messageMatch = RegExp(r'[Mm]essage[:\s]+([^,\n}]+)').firstMatch(errorString);
+      final messageMatch = RegExp(
+        r'[Mm]essage[:\s]+([^,\n}]+)',
+      ).firstMatch(errorString);
       if (messageMatch != null) {
         return messageMatch.group(1)?.trim() ?? errorString;
       }
@@ -64,7 +66,9 @@ class ErrorParser {
           .replaceAll(RegExp(r'Failed to fetch.*?:\s*\d+\s*-\s*'), '');
 
       // If it's still too long or contains status codes, try to extract just the message part
-      if (cleanMessage.length > 100 || cleanMessage.contains('404') || cleanMessage.contains('400')) {
+      if (cleanMessage.length > 100 ||
+          cleanMessage.contains('404') ||
+          cleanMessage.contains('400')) {
         // Try to find a message after status code
         final statusPattern = RegExp(r'\d+\s*[-\s]*([^}]+)');
         final match = statusPattern.firstMatch(cleanMessage);
@@ -73,7 +77,9 @@ class ErrorParser {
         }
       }
 
-      return cleanMessage.isNotEmpty ? cleanMessage : (defaultMessage ?? 'An error occurred');
+      return cleanMessage.isNotEmpty
+          ? cleanMessage
+          : (defaultMessage ?? 'An error occurred');
     } catch (e) {
       return defaultMessage ?? 'An error occurred';
     }
@@ -83,7 +89,7 @@ class ErrorParser {
   static String parseErrorResponse(String responseBody) {
     try {
       final json = jsonDecode(responseBody) as Map<String, dynamic>;
-      
+
       if (json.containsKey('message')) {
         return json['message'] as String;
       }
@@ -111,11 +117,10 @@ class ErrorParser {
           }
         }
       }
-      
+
       return 'An error occurred';
     } catch (e) {
       return extractErrorMessage(responseBody);
     }
   }
 }
-

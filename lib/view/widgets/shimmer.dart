@@ -380,19 +380,18 @@ class DiscoverScreenShimmer extends StatelessWidget {
                       ),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: List.generate(
-                          rowIndex % 2 == 0 ? 2 : 3,
-                          (tagIndex) {
-                            return Container(
-                              width: 100.spMin,
-                              height: 35.spMin,
-                              decoration: BoxDecoration(
-                                color: darkGreyColor,
-                                borderRadius: BorderRadius.circular(20.spMin),
-                              ),
-                            );
-                          },
-                        ),
+                        children: List.generate(rowIndex % 2 == 0 ? 2 : 3, (
+                          tagIndex,
+                        ) {
+                          return Container(
+                            width: 100.spMin,
+                            height: 35.spMin,
+                            decoration: BoxDecoration(
+                              color: darkGreyColor,
+                              borderRadius: BorderRadius.circular(20.spMin),
+                            ),
+                          );
+                        }),
                       ),
                     );
                   }),
