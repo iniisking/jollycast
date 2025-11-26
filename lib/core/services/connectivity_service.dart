@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/foundation.dart';
+import 'package:jollycast/utils/toast_infos.dart';
 
 enum ConnectivityStatus { online, offline }
 
@@ -24,19 +25,21 @@ class ConnectivityService extends ChangeNotifier {
 
     try {
       // Check initial connectivity status
-      await checkConnectivity();
+      final initialResults = await _connectivity.checkConnectivity();
+      _updateStatus(initialResults, isInitialCheck: true);
 
       // Listen to connectivity changes
       _subscription = _connectivity.onConnectivityChanged.listen(
         (List<ConnectivityResult> results) {
+          if (kDebugMode) {
+            print('ConnectivityService: Stream event received: $results');
+          }
           _updateStatus(results);
         },
         onError: (error) {
           // Handle stream errors gracefully (e.g., MissingPluginException)
           if (kDebugMode) {
-            print(
-              'ConnectivityService: Stream error, re-checking connectivity. Error: $error',
-            );
+            print('ConnectivityService: Stream error: $error');
           }
           // Re-check connectivity when stream error occurs
           checkConnectivity();
@@ -44,12 +47,16 @@ class ConnectivityService extends ChangeNotifier {
         cancelOnError: false,
       );
 
-      // Periodic check to ensure connectivity status is accurate
-      // This helps catch cases where the stream might miss updates
-      _periodicCheckTimer = Timer.periodic(
-        const Duration(seconds: 5),
-        (_) => checkConnectivity(),
-      );
+      // Periodic check as backup - critical for Android where stream doesn't always fire
+      // Check every 1.5 seconds to catch reconnection quickly
+      _periodicCheckTimer = Timer.periodic(const Duration(milliseconds: 1500), (
+        _,
+      ) {
+        if (kDebugMode) {
+          print('ConnectivityService: Periodic check triggered');
+        }
+        checkConnectivity();
+      });
     } catch (e) {
       // Handle MissingPluginException gracefully (e.g., during hot reload)
       // Default to online to allow API calls to proceed
@@ -67,40 +74,89 @@ class ConnectivityService extends ChangeNotifier {
   Future<void> checkConnectivity() async {
     try {
       final results = await _connectivity.checkConnectivity();
+      if (kDebugMode) {
+        print('ConnectivityService: Manual check result: $results');
+      }
       _updateStatus(results);
     } catch (e) {
-      // If check fails (e.g., MissingPluginException), default to online
-      // This allows the app to function during development/hot reload
-      _status = ConnectivityStatus.online;
+      // If check fails (e.g., MissingPluginException), don't change status
       if (kDebugMode) {
-        print(
-          'ConnectivityService: Failed to check connectivity, defaulting to online. Error: $e',
-        );
+        print('ConnectivityService: Failed to check connectivity. Error: $e');
       }
-      notifyListeners();
     }
   }
 
-  void _updateStatus(List<ConnectivityResult> results) {
+  void _updateStatus(
+    List<ConnectivityResult> results, {
+    bool isInitialCheck = false,
+  }) {
     final previousStatus = _status;
 
-    // Check if any connection type is available
+    // Handle empty results list (can happen on Android)
+    if (results.isEmpty) {
+      if (kDebugMode) {
+        print('ConnectivityService: Empty results list, assuming offline');
+      }
+      final newStatus = ConnectivityStatus.offline;
+      if (previousStatus != newStatus && !isInitialCheck) {
+        _status = newStatus;
+        notifyListeners();
+        toastError(msg: 'No Internet Connection');
+      }
+      return;
+    }
+
+    // Simplified check - just see if we have any connection type (not none)
+    // This matches the pattern from the user's other project
     final hasConnection = results.any(
-      (result) =>
-          result == ConnectivityResult.mobile ||
-          result == ConnectivityResult.wifi ||
-          result == ConnectivityResult.ethernet ||
-          result == ConnectivityResult.vpn ||
-          result == ConnectivityResult.other,
+      (result) => result != ConnectivityResult.none,
     );
 
-    _status = hasConnection
+    final newStatus = hasConnection
         ? ConnectivityStatus.online
         : ConnectivityStatus.offline;
 
-    // Notify listeners when status changes
-    if (previousStatus != _status) {
+    // Only update and notify if status actually changed
+    if (previousStatus != newStatus) {
+      _status = newStatus;
+
+      if (kDebugMode) {
+        print(
+          'ConnectivityService: Status changed from $previousStatus to $newStatus (results: $results)',
+        );
+      }
+
+      // Show toast notifications for connectivity changes
+      // Only show toast if not initial check (to avoid showing on app startup)
+      if (!isInitialCheck) {
+        if (newStatus == ConnectivityStatus.online &&
+            previousStatus == ConnectivityStatus.offline) {
+          // Only show "restored" toast when transitioning from offline to online
+          if (kDebugMode) {
+            print(
+              'ConnectivityService: Showing "Internet Connection Restored" toast',
+            );
+          }
+          toastInfo(msg: 'Internet Connection Restored');
+        } else if (newStatus == ConnectivityStatus.offline &&
+            previousStatus == ConnectivityStatus.online) {
+          // Only show "offline" toast when transitioning from online to offline
+          if (kDebugMode) {
+            print(
+              'ConnectivityService: Showing "No Internet Connection" toast',
+            );
+          }
+          toastError(msg: 'No Internet Connection');
+        }
+      }
+
       notifyListeners();
+    } else {
+      if (kDebugMode) {
+        print(
+          'ConnectivityService: Status unchanged (still $previousStatus, results: $results)',
+        );
+      }
     }
   }
 

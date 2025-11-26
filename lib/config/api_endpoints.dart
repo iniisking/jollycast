@@ -1,8 +1,14 @@
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class ApiEndpoints {
-  static String get baseUrl =>
-      dotenv.env['API_BASE_URL'] ?? 'https://api.jollypodcast.net/api';
+  static String get baseUrl {
+    try {
+      return dotenv.env['API_BASE_URL'] ?? 'https://api.jollypodcast.net/api';
+    } catch (e) {
+      // dotenv not initialized (e.g., .env file not found)
+      return 'https://api.jollypodcast.net/api';
+    }
+  }
 
   // Auth endpoints
   static String get login => '$baseUrl/auth/login';

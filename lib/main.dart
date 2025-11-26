@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -13,8 +14,15 @@ import 'package:jollycast/core/services/connectivity_service.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Load environment variables
-  await dotenv.load(fileName: '.env');
+  // Load environment variables (optional - will use defaults if .env doesn't exist)
+  try {
+    await dotenv.load(fileName: '.env');
+  } catch (e) {
+    // .env file not found, will use default values from api_endpoints.dart
+    if (kDebugMode) {
+      print('Warning: .env file not found, using default configuration');
+    }
+  }
 
   // Initialize cache service
   await CacheService.init();
