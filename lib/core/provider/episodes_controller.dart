@@ -33,6 +33,8 @@ class EpisodesController extends ChangeNotifier {
   KeywordsRes? _keywordsResponse;
   List<Keyword> _keywords = [];
   PaginatedKeywords? _keywordsPagination;
+  Episode? _currentEpisode;
+  bool _isLoadingEpisode = false;
 
   bool get isLoading => _isLoading;
   bool get isLoadingEditorsPick => _isLoadingEditorsPick;
@@ -50,6 +52,8 @@ class EpisodesController extends ChangeNotifier {
   List<Episode> get handpickedEpisodes => _handpickedEpisodes;
   List<Keyword> get keywords => _keywords;
   PaginatedKeywords? get keywordsPagination => _keywordsPagination;
+  Episode? get currentEpisode => _currentEpisode;
+  bool get isLoadingEpisode => _isLoadingEpisode;
   bool get hasMorePages =>
       _pagination != null && _pagination!.nextPageUrl != null;
   bool get hasMoreTopJollyPages =>
@@ -375,6 +379,34 @@ class EpisodesController extends ChangeNotifier {
       perPage: _keywordsPagination?.perPage ?? 20,
       token: token,
     );
+  }
+
+  // Get single episode by id
+  Future<Episode?> getEpisodeById({required int id, String? token}) async {
+    _isLoadingEpisode = true;
+    notifyListeners();
+
+    try {
+      final episode = await EpisodesService.getEpisodeById(
+        id: id,
+        token: token,
+      );
+
+      _currentEpisode = episode;
+      _isLoadingEpisode = false;
+      notifyListeners();
+
+      AppLogger.info('Episode $id loaded successfully');
+      return episode;
+    } catch (e, stackTrace) {
+      _isLoadingEpisode = false;
+      notifyListeners();
+
+      final errorMessage = ErrorParser.extractErrorMessage(e);
+      AppLogger.error('Failed to load episode $id', e, stackTrace);
+      toastError(msg: errorMessage);
+      return null;
+    }
   }
 
   // Clear episodes

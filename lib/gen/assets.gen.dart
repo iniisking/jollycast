@@ -63,6 +63,10 @@ class $AssetsImagesGen {
   AssetGenImage get onboardingImage1 =>
       const AssetGenImage('assets/images/onboarding image 1.png');
 
+  /// File path: assets/images/splash screen jolly.png
+  AssetGenImage get splashScreenJolly =>
+      const AssetGenImage('assets/images/splash screen jolly.png');
+
   /// File path: assets/images/top jolly image .jpg
   AssetGenImage get topJollyImage =>
       const AssetGenImage('assets/images/top jolly image .jpg');
@@ -81,6 +85,7 @@ class $AssetsImagesGen {
     logoOnboarding45,
     nigeriaFlagIcon,
     onboardingImage1,
+    splashScreenJolly,
     topJollyImage,
   ];
 }
@@ -127,6 +132,14 @@ class $AssetsSvgGen {
   /// File path: assets/svg/discover.svg
   SvgGenImage get discover => const SvgGenImage('assets/svg/discover.svg');
 
+  /// File path: assets/svg/fast forward 10 sec.svg
+  SvgGenImage get fastForward10Sec =>
+      const SvgGenImage('assets/svg/fast forward 10 sec.svg');
+
+  /// File path: assets/svg/fast forward.svg
+  SvgGenImage get fastForward =>
+      const SvgGenImage('assets/svg/fast forward.svg');
+
   /// File path: assets/svg/headphones.svg
   SvgGenImage get headphones => const SvgGenImage('assets/svg/headphones.svg');
 
@@ -142,6 +155,13 @@ class $AssetsSvgGen {
 
   /// File path: assets/svg/purple star.svg
   SvgGenImage get purpleStar => const SvgGenImage('assets/svg/purple star.svg');
+
+  /// File path: assets/svg/rewind 10 sec.svg
+  SvgGenImage get rewind10Sec =>
+      const SvgGenImage('assets/svg/rewind 10 sec.svg');
+
+  /// File path: assets/svg/rewind.svg
+  SvgGenImage get rewind => const SvgGenImage('assets/svg/rewind.svg');
 
   /// File path: assets/svg/save.svg
   SvgGenImage get save => const SvgGenImage('assets/svg/save.svg');
@@ -167,11 +187,15 @@ class $AssetsSvgGen {
     avatar9,
     category,
     discover,
+    fastForward10Sec,
+    fastForward,
     headphones,
     library,
     notification,
     playIcon,
     purpleStar,
+    rewind10Sec,
+    rewind,
     save,
     search,
     share,

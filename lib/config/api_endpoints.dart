@@ -26,4 +26,8 @@ class ApiEndpoints {
   static String keywords({int page = 1, int perPage = 20}) {
     return '$baseUrl/podcasts/keywords?page=$page&per_page=$perPage';
   }
+
+  static String episode(int id) {
+    return '$baseUrl/episodes/$id';
+  }
 }

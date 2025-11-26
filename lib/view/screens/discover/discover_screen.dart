@@ -10,6 +10,9 @@ import 'package:jollycast/view/widgets/card.dart';
 import 'package:jollycast/core/provider/episodes_controller.dart';
 import 'package:jollycast/core/provider/auth_controller.dart';
 import 'package:intl/intl.dart';
+import 'package:shimmer/shimmer.dart';
+import 'package:jollycast/core/model/episodes/get_trending_model.dart';
+import 'package:jollycast/view/screens/player/player_screen.dart';
 
 class DiscoverScreen extends StatefulWidget {
   const DiscoverScreen({super.key});
@@ -74,6 +77,55 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
     ]);
   }
 
+  Future<void> _openPlayerScreen(Episode episode) async {
+    final episodesController = Provider.of<EpisodesController>(
+      context,
+      listen: false,
+    );
+    final authToken = Provider.of<AuthController>(context, listen: false).token;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(child: CircularProgressIndicator()),
+    );
+
+    Episode? detailed;
+    try {
+      detailed = await episodesController.getEpisodeById(
+        id: episode.id,
+        token: authToken,
+      );
+    } finally {
+      if (mounted) {
+        Navigator.of(context, rootNavigator: true).pop();
+      }
+    }
+
+    if (!mounted) return;
+
+    if (detailed == null) {
+      detailed = episode;
+    }
+
+    Navigator.of(context).push(
+      PageRouteBuilder(
+        transitionDuration: const Duration(milliseconds: 350),
+        pageBuilder: (_, animation, __) => FadeTransition(
+          opacity: animation,
+          child: PlayerScreen(episode: detailed!),
+        ),
+        transitionsBuilder: (_, animation, __, child) {
+          final offsetAnimation = Tween<Offset>(
+            begin: const Offset(0, 1),
+            end: Offset.zero,
+          ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOut));
+          return SlideTransition(position: offsetAnimation, child: child);
+        },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -118,14 +170,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                   SizedBox(
                     height: 400.spMin,
                     child: episodesController.trendingEpisodes.isEmpty
-                        ? Center(
-                            child: CustomTextWidget(
-                              text: 'No trending episodes',
-                              fontSize: 16,
-                              color: greyTextColor,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          )
+                        ? _buildTrendingPlaceholders()
                         : ListView.builder(
                             scrollDirection: Axis.horizontal,
                             padding: EdgeInsets.symmetric(horizontal: 24.spMin),
@@ -134,15 +179,19 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                             itemBuilder: (context, index) {
                               final episode =
                                   episodesController.trendingEpisodes[index];
-                              return TrendingCard(
-                                imagePath: episode.pictureUrl,
-                                podcastName: episode.podcast.title,
-                                episodeTitle: episode.title.length > 30
-                                    ? '${episode.title.substring(0, 30)}...'
-                                    : episode.title,
-                                description: episode.description.length > 100
-                                    ? '${episode.description.substring(0, 100)}...'
-                                    : episode.description,
+                              return GestureDetector(
+                                onTap: () => _openPlayerScreen(episode),
+                                child: TrendingCard(
+                                  imagePath: episode.pictureUrl,
+                                  podcastName: episode.podcast.title,
+                                  episodeTitle: episode.title.length > 30
+                                      ? '${episode.title.substring(0, 30)}...'
+                                      : episode.title,
+                                  description: episode.description.length > 100
+                                      ? '${episode.description.substring(0, 100)}...'
+                                      : episode.description,
+                                  onPlay: () => _openPlayerScreen(episode),
+                                ),
                               );
                             },
                           ),
@@ -171,29 +220,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                   Padding(
                     padding: EdgeInsets.symmetric(horizontal: 14.spMin),
                     child: episodesController.editorsPickEpisode == null
-                        ? Container(
-                            height: 206.spMin,
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                begin: Alignment.topCenter,
-                                end: Alignment.bottomCenter,
-                                colors: [
-                                  editorsPickGradientStart,
-                                  editorsPickGradientEnd,
-                                ],
-                                stops: const [0.4362, 0.9953],
-                              ),
-                              borderRadius: BorderRadius.circular(16.spMin),
-                            ),
-                            child: Center(
-                              child: CustomTextWidget(
-                                text: 'No editor\'s pick available',
-                                fontSize: 16,
-                                color: whiteColor,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          )
+                        ? _buildEditorsPickPlaceholder()
                         : _buildEditorsPickCard(
                             episodesController.editorsPickEpisode!,
                           ),
@@ -239,14 +266,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                   SizedBox(
                     height: 237.spMin,
                     child: episodesController.topJollyPodcasts.isEmpty
-                        ? Center(
-                            child: CustomTextWidget(
-                              text: 'No top jolly podcasts',
-                              fontSize: 16,
-                              color: greyTextColor,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          )
+                        ? _buildTopJollyPlaceholders()
                         : ListView.builder(
                             scrollDirection: Axis.horizontal,
                             padding: EdgeInsets.only(left: 14.spMin),
@@ -300,14 +320,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                   SizedBox(
                     height: 510.spMin,
                     child: episodesController.latestEpisodes.isEmpty
-                        ? Center(
-                            child: CustomTextWidget(
-                              text: 'No latest episodes',
-                              fontSize: 16,
-                              color: greyTextColor,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          )
+                        ? _buildLatestEpisodesPlaceholder()
                         : ListView.builder(
                             scrollDirection: Axis.horizontal,
                             padding: EdgeInsets.only(left: 12.spMin),
@@ -344,139 +357,151 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                                       final durationMinutes =
                                           (episode.duration / 60).round();
 
-                                      return Padding(
-                                        padding: EdgeInsets.only(
-                                          bottom: rowIndex < episodes.length - 1
-                                              ? 21.spMin
-                                              : 0,
-                                        ),
-                                        child: Row(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            // Number text
-                                            CustomTextWidget(
-                                              text: itemNumber,
-                                              fontSize: 15,
-                                              color: greyTextColor,
-                                              fontWeight: FontWeight.w700,
-                                            ),
-                                            SizedBox(width: 6.spMin),
-                                            // Image container with play button
-                                            Container(
-                                              width: 79.spMin,
-                                              height: 79.79798126220703.spMin,
-                                              decoration: BoxDecoration(
-                                                borderRadius:
-                                                    BorderRadius.circular(
-                                                      5.spMin,
-                                                    ),
+                                      return GestureDetector(
+                                        onTap: () => _openPlayerScreen(episode),
+                                        child: Padding(
+                                          padding: EdgeInsets.only(
+                                            bottom:
+                                                rowIndex < episodes.length - 1
+                                                ? 21.spMin
+                                                : 0,
+                                          ),
+                                          child: Row(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              // Number text
+                                              CustomTextWidget(
+                                                text: itemNumber,
+                                                fontSize: 15,
+                                                color: greyTextColor,
+                                                fontWeight: FontWeight.w700,
                                               ),
-                                              child: Stack(
-                                                children: [
-                                                  ClipRRect(
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                          5.spMin,
-                                                        ),
-                                                    child: Image.network(
-                                                      episode.pictureUrl,
-                                                      width: 79.spMin,
-                                                      height: 79.79798126220703
-                                                          .spMin,
-                                                      fit: BoxFit.cover,
-                                                      errorBuilder:
-                                                          (
-                                                            context,
-                                                            error,
-                                                            stackTrace,
-                                                          ) {
-                                                            return Container(
-                                                              width: 79.spMin,
-                                                              height:
-                                                                  79.79798126220703
-                                                                      .spMin,
-                                                              color:
-                                                                  darkGreyColor,
-                                                              child: Icon(
-                                                                Icons
-                                                                    .image_not_supported,
+                                              SizedBox(width: 6.spMin),
+                                              // Image container with play button
+                                              Container(
+                                                width: 79.spMin,
+                                                height: 79.79798126220703.spMin,
+                                                decoration: BoxDecoration(
+                                                  borderRadius:
+                                                      BorderRadius.circular(
+                                                        5.spMin,
+                                                      ),
+                                                ),
+                                                child: Stack(
+                                                  children: [
+                                                    ClipRRect(
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                            5.spMin,
+                                                          ),
+                                                      child: Image.network(
+                                                        episode.pictureUrl,
+                                                        width: 79.spMin,
+                                                        height:
+                                                            79.79798126220703
+                                                                .spMin,
+                                                        fit: BoxFit.cover,
+                                                        errorBuilder:
+                                                            (
+                                                              context,
+                                                              error,
+                                                              stackTrace,
+                                                            ) {
+                                                              return Container(
+                                                                width: 79.spMin,
+                                                                height:
+                                                                    79.79798126220703
+                                                                        .spMin,
                                                                 color:
-                                                                    greyTextColor,
-                                                                size: 20.spMin,
-                                                              ),
-                                                            );
-                                                          },
+                                                                    darkGreyColor,
+                                                                child: Icon(
+                                                                  Icons
+                                                                      .image_not_supported,
+                                                                  color:
+                                                                      greyTextColor,
+                                                                  size:
+                                                                      20.spMin,
+                                                                ),
+                                                              );
+                                                            },
+                                                      ),
                                                     ),
-                                                  ),
-                                                  Center(
-                                                    child: Container(
-                                                      width: 35.54999923706055
-                                                          .spMin,
-                                                      height: 35.90909194946289
-                                                          .spMin,
-                                                      decoration: BoxDecoration(
-                                                        color: primaryColor
-                                                            .withOpacity(0.7),
-                                                        shape: BoxShape.circle,
-                                                        border: Border.all(
+                                                    Center(
+                                                      child: Container(
+                                                        width: 35.54999923706055
+                                                            .spMin,
+                                                        height:
+                                                            35.90909194946289
+                                                                .spMin,
+                                                        decoration: BoxDecoration(
+                                                          color: primaryColor
+                                                              .withOpacity(0.7),
+                                                          shape:
+                                                              BoxShape.circle,
+                                                          border: Border.all(
+                                                            color: whiteColor,
+                                                            width: 2.spMin,
+                                                          ),
+                                                        ),
+                                                        child: Icon(
+                                                          Icons.play_arrow,
                                                           color: whiteColor,
-                                                          width: 2.spMin,
+                                                          size: 20.spMin,
                                                         ),
                                                       ),
-                                                      child: Icon(
-                                                        Icons.play_arrow,
-                                                        color: whiteColor,
-                                                        size: 20.spMin,
-                                                      ),
                                                     ),
-                                                  ),
-                                                ],
+                                                  ],
+                                                ),
                                               ),
-                                            ),
-                                            SizedBox(width: 7.spMin),
-                                            // Text column
-                                            Expanded(
-                                              child: Column(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
-                                                children: [
-                                                  CustomTextWidget(
-                                                    text:
-                                                        episode.title.length >
-                                                            30
-                                                        ? '${episode.title.substring(0, 30)}...'
-                                                        : episode.title,
-                                                    fontSize: 15,
-                                                    color: whiteColor,
-                                                    fontWeight: FontWeight.w800,
-                                                  ),
-                                                  SizedBox(height: 2.spMin),
-                                                  CustomTextWidget(
-                                                    text:
-                                                        episode
-                                                                .description
-                                                                .length >
-                                                            50
-                                                        ? '${episode.description.substring(0, 50)}...'
-                                                        : episode.description,
-                                                    fontSize: 13,
-                                                    color: descriptionTextColor,
-                                                    fontWeight: FontWeight.w500,
-                                                    maxLines: 2,
-                                                  ),
-                                                  SizedBox(height: 7.spMin),
-                                                  CustomTextWidget(
-                                                    text:
-                                                        '${dateFormat.format(episode.publishedAt)} - $durationMinutes minutes',
-                                                    fontSize: 13,
-                                                    color: greyTextColor,
-                                                    fontWeight: FontWeight.w700,
-                                                  ),
-                                                ],
+                                              SizedBox(width: 7.spMin),
+                                              // Text column
+                                              Expanded(
+                                                child: Column(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  children: [
+                                                    CustomTextWidget(
+                                                      text:
+                                                          episode.title.length >
+                                                              30
+                                                          ? '${episode.title.substring(0, 30)}...'
+                                                          : episode.title,
+                                                      fontSize: 15,
+                                                      color: whiteColor,
+                                                      fontWeight:
+                                                          FontWeight.w800,
+                                                    ),
+                                                    SizedBox(height: 2.spMin),
+                                                    CustomTextWidget(
+                                                      text:
+                                                          episode
+                                                                  .description
+                                                                  .length >
+                                                              50
+                                                          ? '${episode.description.substring(0, 50)}...'
+                                                          : episode.description,
+                                                      fontSize: 13,
+                                                      color:
+                                                          descriptionTextColor,
+                                                      fontWeight:
+                                                          FontWeight.w500,
+                                                      maxLines: 2,
+                                                    ),
+                                                    SizedBox(height: 7.spMin),
+                                                    CustomTextWidget(
+                                                      text:
+                                                          '${dateFormat.format(episode.publishedAt)} - $durationMinutes minutes',
+                                                      fontSize: 13,
+                                                      color: greyTextColor,
+                                                      fontWeight:
+                                                          FontWeight.w700,
+                                                    ),
+                                                  ],
+                                                ),
                                               ),
-                                            ),
-                                          ],
+                                            ],
+                                          ),
                                         ),
                                       );
                                     }),
@@ -658,225 +683,230 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                   SizedBox(height: 28.spMin),
                   // Handpicked containers list
                   episodesController.handpickedEpisodes.isEmpty
-                      ? Center(
-                          child: CustomTextWidget(
-                            text: 'No handpicked episodes',
-                            fontSize: 16,
-                            color: greyTextColor,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        )
+                      ? _buildHandpickedPlaceholder()
                       : Column(
                           children: List.generate(
                             episodesController.handpickedEpisodes.length,
                             (index) {
                               final episode =
                                   episodesController.handpickedEpisodes[index];
-                              return Padding(
-                                padding: EdgeInsets.symmetric(
-                                  horizontal: 24.spMin,
-                                ),
-                                child: Container(
-                                  width: 382.spMin,
-                                  height: 500.spMin,
-                                  margin: EdgeInsets.only(
-                                    bottom:
-                                        index <
-                                            episodesController
-                                                    .handpickedEpisodes
-                                                    .length -
-                                                1
-                                        ? 20.spMin
-                                        : 0,
+                              return GestureDetector(
+                                onTap: () => _openPlayerScreen(episode),
+                                child: Padding(
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: 24.spMin,
                                   ),
-                                  decoration: BoxDecoration(
-                                    color: topJollyCardColor,
-                                    borderRadius: BorderRadius.circular(
-                                      12.spMin,
+                                  child: Container(
+                                    width: 382.spMin,
+                                    height: 500.spMin,
+                                    margin: EdgeInsets.only(
+                                      bottom:
+                                          index <
+                                              episodesController
+                                                      .handpickedEpisodes
+                                                      .length -
+                                                  1
+                                          ? 20.spMin
+                                          : 0,
                                     ),
-                                    border: Border.all(
-                                      color: topJollyBorderColor,
-                                      width: 1.spMin,
+                                    decoration: BoxDecoration(
+                                      color: topJollyCardColor,
+                                      borderRadius: BorderRadius.circular(
+                                        12.spMin,
+                                      ),
+                                      border: Border.all(
+                                        color: topJollyBorderColor,
+                                        width: 1.spMin,
+                                      ),
                                     ),
-                                  ),
-                                  child: Padding(
-                                    padding: EdgeInsets.only(
-                                      left: 57.spMin,
-                                      right: 48.5.spMin,
-                                      top: 37.spMin,
-                                      bottom: 8.spMin,
-                                    ),
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        // Image container
-                                        Container(
-                                          width: 278.spMin,
-                                          height: 237.spMin,
-                                          decoration: BoxDecoration(
-                                            borderRadius: BorderRadius.circular(
-                                              8.spMin,
+                                    child: Padding(
+                                      padding: EdgeInsets.only(
+                                        left: 57.spMin,
+                                        right: 48.5.spMin,
+                                        top: 37.spMin,
+                                        bottom: 8.spMin,
+                                      ),
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          // Image container
+                                          Container(
+                                            width: 278.spMin,
+                                            height: 237.spMin,
+                                            decoration: BoxDecoration(
+                                              borderRadius:
+                                                  BorderRadius.circular(
+                                                    8.spMin,
+                                                  ),
+                                            ),
+                                            child: ClipRRect(
+                                              borderRadius:
+                                                  BorderRadius.circular(
+                                                    8.spMin,
+                                                  ),
+                                              child: Image.network(
+                                                episode.podcast.pictureUrl,
+                                                width: 278.spMin,
+                                                height: 237.spMin,
+                                                fit: BoxFit.cover,
+                                                errorBuilder:
+                                                    (
+                                                      context,
+                                                      error,
+                                                      stackTrace,
+                                                    ) {
+                                                      return Container(
+                                                        width: 278.spMin,
+                                                        height: 237.spMin,
+                                                        color: darkGreyColor,
+                                                        child: Icon(
+                                                          Icons
+                                                              .image_not_supported,
+                                                          color: greyTextColor,
+                                                          size: 40.spMin,
+                                                        ),
+                                                      );
+                                                    },
+                                              ),
                                             ),
                                           ),
-                                          child: ClipRRect(
-                                            borderRadius: BorderRadius.circular(
-                                              8.spMin,
-                                            ),
-                                            child: Image.network(
-                                              episode.podcast.pictureUrl,
-                                              width: 278.spMin,
-                                              height: 237.spMin,
-                                              fit: BoxFit.cover,
-                                              errorBuilder:
-                                                  (context, error, stackTrace) {
-                                                    return Container(
-                                                      width: 278.spMin,
-                                                      height: 237.spMin,
-                                                      color: darkGreyColor,
-                                                      child: Icon(
-                                                        Icons
-                                                            .image_not_supported,
-                                                        color: greyTextColor,
-                                                        size: 40.spMin,
+                                          SizedBox(height: 11.spMin),
+                                          // Title
+                                          CustomTextWidget(
+                                            text: episode.podcast.title,
+                                            fontSize: 18,
+                                            color: whiteColor,
+                                            fontWeight: FontWeight.w800,
+                                            textAlign: TextAlign.start,
+                                          ),
+                                          SizedBox(height: 0),
+                                          // Author
+                                          CustomTextWidget(
+                                            text:
+                                                'By: ${episode.podcast.author}',
+                                            fontSize: 14,
+                                            color: greyTextColor,
+                                            fontWeight: FontWeight.w500,
+                                            textAlign: TextAlign.start,
+                                          ),
+                                          SizedBox(height: 9.spMin),
+                                          // Description
+                                          CustomTextWidget(
+                                            text:
+                                                episode
+                                                        .podcast
+                                                        .description
+                                                        .length >
+                                                    150
+                                                ? '${episode.podcast.description.substring(0, 150)}...'
+                                                : episode.podcast.description,
+                                            fontSize: 14,
+                                            color: descriptionTextColor,
+                                            fontWeight: FontWeight.w500,
+                                            maxLines: 4,
+                                            textAlign: TextAlign.start,
+                                          ),
+                                          SizedBox(height: 21.spMin),
+                                          // Buttons row with episodes text
+                                          Row(
+                                            children: [
+                                              // Follow button
+                                              Container(
+                                                width: 78.5.spMin,
+                                                height: 30.spMin,
+                                                decoration: BoxDecoration(
+                                                  color: buttonGreyColor,
+                                                  borderRadius:
+                                                      BorderRadius.circular(
+                                                        18.spMin,
                                                       ),
-                                                    );
-                                                  },
-                                            ),
+                                                ),
+                                                child: Padding(
+                                                  padding: EdgeInsets.all(
+                                                    6.spMin,
+                                                  ),
+                                                  child: Row(
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment
+                                                            .center,
+                                                    children: [
+                                                      Assets.svg.add.svg(
+                                                        width: 18.spMin,
+                                                        height: 18.spMin,
+                                                        colorFilter:
+                                                            ColorFilter.mode(
+                                                              greyTextColor,
+                                                              BlendMode.srcIn,
+                                                            ),
+                                                      ),
+                                                      SizedBox(width: 4.spMin),
+                                                      CustomTextWidget(
+                                                        text: 'Follow',
+                                                        fontSize: 13,
+                                                        color: greyTextColor,
+                                                        fontWeight:
+                                                            FontWeight.w700,
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                              ),
+                                              SizedBox(width: 13.spMin),
+                                              // Play button
+                                              Container(
+                                                width: 78.5.spMin,
+                                                height: 30.spMin,
+                                                decoration: BoxDecoration(
+                                                  color: playButtonGreen,
+                                                  borderRadius:
+                                                      BorderRadius.circular(
+                                                        18.spMin,
+                                                      ),
+                                                ),
+                                                child: Padding(
+                                                  padding: EdgeInsets.all(
+                                                    6.spMin,
+                                                  ),
+                                                  child: Row(
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment
+                                                            .center,
+                                                    children: [
+                                                      Assets.svg.playIcon.svg(
+                                                        width: 18.spMin,
+                                                        height: 18.spMin,
+                                                        colorFilter:
+                                                            ColorFilter.mode(
+                                                              whiteColor,
+                                                              BlendMode.srcIn,
+                                                            ),
+                                                      ),
+                                                      SizedBox(width: 4.spMin),
+                                                      CustomTextWidget(
+                                                        text: 'Play',
+                                                        fontSize: 13,
+                                                        color: whiteColor,
+                                                        fontWeight:
+                                                            FontWeight.w700,
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                              ),
+                                              SizedBox(width: 26.spMin),
+                                              // Episodes count - placeholder since we don't have this data
+                                              CustomTextWidget(
+                                                text: 'Episodes',
+                                                fontSize: 14,
+                                                color: whiteColor,
+                                                fontWeight: FontWeight.w600,
+                                                textAlign: TextAlign.start,
+                                              ),
+                                            ],
                                           ),
-                                        ),
-                                        SizedBox(height: 11.spMin),
-                                        // Title
-                                        CustomTextWidget(
-                                          text: episode.podcast.title,
-                                          fontSize: 18,
-                                          color: whiteColor,
-                                          fontWeight: FontWeight.w800,
-                                          textAlign: TextAlign.start,
-                                        ),
-                                        SizedBox(height: 0),
-                                        // Author
-                                        CustomTextWidget(
-                                          text: 'By: ${episode.podcast.author}',
-                                          fontSize: 14,
-                                          color: greyTextColor,
-                                          fontWeight: FontWeight.w500,
-                                          textAlign: TextAlign.start,
-                                        ),
-                                        SizedBox(height: 9.spMin),
-                                        // Description
-                                        CustomTextWidget(
-                                          text:
-                                              episode
-                                                      .podcast
-                                                      .description
-                                                      .length >
-                                                  150
-                                              ? '${episode.podcast.description.substring(0, 150)}...'
-                                              : episode.podcast.description,
-                                          fontSize: 14,
-                                          color: descriptionTextColor,
-                                          fontWeight: FontWeight.w500,
-                                          maxLines: 4,
-                                          textAlign: TextAlign.start,
-                                        ),
-                                        SizedBox(height: 21.spMin),
-                                        // Buttons row with episodes text
-                                        Row(
-                                          children: [
-                                            // Follow button
-                                            Container(
-                                              width: 78.5.spMin,
-                                              height: 30.spMin,
-                                              decoration: BoxDecoration(
-                                                color: buttonGreyColor,
-                                                borderRadius:
-                                                    BorderRadius.circular(
-                                                      18.spMin,
-                                                    ),
-                                              ),
-                                              child: Padding(
-                                                padding: EdgeInsets.all(
-                                                  6.spMin,
-                                                ),
-                                                child: Row(
-                                                  mainAxisAlignment:
-                                                      MainAxisAlignment.center,
-                                                  children: [
-                                                    Assets.svg.add.svg(
-                                                      width: 18.spMin,
-                                                      height: 18.spMin,
-                                                      colorFilter:
-                                                          ColorFilter.mode(
-                                                            greyTextColor,
-                                                            BlendMode.srcIn,
-                                                          ),
-                                                    ),
-                                                    SizedBox(width: 4.spMin),
-                                                    CustomTextWidget(
-                                                      text: 'Follow',
-                                                      fontSize: 13,
-                                                      color: greyTextColor,
-                                                      fontWeight:
-                                                          FontWeight.w700,
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
-                                            ),
-                                            SizedBox(width: 13.spMin),
-                                            // Play button
-                                            Container(
-                                              width: 78.5.spMin,
-                                              height: 30.spMin,
-                                              decoration: BoxDecoration(
-                                                color: playButtonGreen,
-                                                borderRadius:
-                                                    BorderRadius.circular(
-                                                      18.spMin,
-                                                    ),
-                                              ),
-                                              child: Padding(
-                                                padding: EdgeInsets.all(
-                                                  6.spMin,
-                                                ),
-                                                child: Row(
-                                                  mainAxisAlignment:
-                                                      MainAxisAlignment.center,
-                                                  children: [
-                                                    Assets.svg.playIcon.svg(
-                                                      width: 18.spMin,
-                                                      height: 18.spMin,
-                                                      colorFilter:
-                                                          ColorFilter.mode(
-                                                            whiteColor,
-                                                            BlendMode.srcIn,
-                                                          ),
-                                                    ),
-                                                    SizedBox(width: 4.spMin),
-                                                    CustomTextWidget(
-                                                      text: 'Play',
-                                                      fontSize: 13,
-                                                      color: whiteColor,
-                                                      fontWeight:
-                                                          FontWeight.w700,
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
-                                            ),
-                                            SizedBox(width: 26.spMin),
-                                            // Episodes count - placeholder since we don't have this data
-                                            CustomTextWidget(
-                                              text: 'Episodes',
-                                              fontSize: 14,
-                                              color: whiteColor,
-                                              fontWeight: FontWeight.w600,
-                                              textAlign: TextAlign.start,
-                                            ),
-                                          ],
-                                        ),
-                                      ],
+                                        ],
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -1111,178 +1141,301 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
     );
   }
 
-  Widget _buildEditorsPickCard(dynamic episode) {
-    return Container(
-      height: 206.spMin,
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [editorsPickGradientStart, editorsPickGradientEnd],
-          stops: const [0.4362, 0.9953],
+  Widget _buildEditorsPickCard(Episode episode) {
+    return GestureDetector(
+      onTap: () => _openPlayerScreen(episode),
+      child: Container(
+        height: 206.spMin,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [editorsPickGradientStart, editorsPickGradientEnd],
+            stops: const [0.4362, 0.9953],
+          ),
+          borderRadius: BorderRadius.circular(16.spMin),
         ),
-        borderRadius: BorderRadius.circular(16.spMin),
-      ),
-      child: Row(
-        children: [
-          // Image with 7px padding all around
-          Padding(
-            padding: EdgeInsets.all(7.spMin),
-            child: Container(
-              width: 192.spMin,
-              height: 192.spMin,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(8.spMin),
-              ),
-              child: Stack(
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(8.spMin),
-                    child: Image.network(
-                      episode.pictureUrl,
-                      width: 192.spMin,
-                      height: 192.spMin,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) {
-                        return Container(
-                          width: 192.spMin,
-                          height: 192.spMin,
-                          color: darkGreyColor,
-                          child: Icon(
-                            Icons.image_not_supported,
-                            color: greyTextColor,
-                            size: 40.spMin,
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                  Center(
-                    child: Container(
-                      width: 48.spMin,
-                      height: 48.spMin,
-                      decoration: BoxDecoration(
-                        color: primaryColor.withOpacity(0.7),
-                        shape: BoxShape.circle,
-                        border: Border.all(color: whiteColor, width: 2.spMin),
-                      ),
-                      child: Icon(
-                        Icons.play_arrow,
-                        color: whiteColor,
-                        size: 26.spMin,
+        child: Row(
+          children: [
+            // Image with 7px padding all around
+            Padding(
+              padding: EdgeInsets.all(7.spMin),
+              child: Container(
+                width: 192.spMin,
+                height: 192.spMin,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(8.spMin),
+                ),
+                child: Stack(
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(8.spMin),
+                      child: Image.network(
+                        episode.pictureUrl,
+                        width: 192.spMin,
+                        height: 192.spMin,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Container(
+                            width: 192.spMin,
+                            height: 192.spMin,
+                            color: darkGreyColor,
+                            child: Icon(
+                              Icons.image_not_supported,
+                              color: greyTextColor,
+                              size: 40.spMin,
+                            ),
+                          );
+                        },
                       ),
                     ),
-                  ),
-                ],
+                    Center(
+                      child: Container(
+                        width: 48.spMin,
+                        height: 48.spMin,
+                        decoration: BoxDecoration(
+                          color: primaryColor.withOpacity(0.7),
+                          shape: BoxShape.circle,
+                          border: Border.all(color: whiteColor, width: 2.spMin),
+                        ),
+                        child: Icon(
+                          Icons.play_arrow,
+                          color: whiteColor,
+                          size: 26.spMin,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
-          // Column on the right
-          Expanded(
-            child: Padding(
-              padding: EdgeInsets.only(
-                top: 14.spMin,
-                right: 7.spMin,
-                bottom: 12.spMin,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Title
-                  CustomTextWidget(
-                    text: episode.title.length > 30
-                        ? '${episode.title.substring(0, 30)}...'
-                        : episode.title,
-                    fontSize: 16,
-                    color: whiteColor,
-                    fontWeight: FontWeight.w800,
-                  ),
-                  SizedBox(height: 1.spMin),
-                  // Author
-                  CustomTextWidget(
-                    text: 'By: ${episode.podcast.author}',
-                    fontSize: 13,
-                    color: greyTextColor,
-                    fontWeight: FontWeight.w500,
-                  ),
-                  SizedBox(height: 6.spMin),
-                  // Description
-                  CustomTextWidget(
-                    text: episode.description.length > 120
-                        ? '${episode.description.substring(0, 120)}...'
-                        : episode.description,
-                    fontSize: 13,
-                    color: descriptionTextColor,
-                    fontWeight: FontWeight.w500,
-                    maxLines: 5,
-                  ),
-                  SizedBox(height: 11.spMin),
-                  // Row with buttons
-                  Row(
-                    children: [
-                      // First button
-                      Container(
-                        width: 78.5.spMin,
-                        height: 30.spMin,
-                        decoration: BoxDecoration(
-                          color: buttonGreyColor,
-                          borderRadius: BorderRadius.circular(18.spMin),
-                        ),
-                        child: Padding(
-                          padding: EdgeInsets.all(6.spMin),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Assets.svg.add.svg(
-                                width: 18.spMin,
-                                height: 18.spMin,
-                                colorFilter: ColorFilter.mode(
-                                  greyTextColor,
-                                  BlendMode.srcIn,
+            // Column on the right
+            Expanded(
+              child: Padding(
+                padding: EdgeInsets.only(
+                  top: 14.spMin,
+                  right: 7.spMin,
+                  bottom: 12.spMin,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Title
+                    CustomTextWidget(
+                      text: episode.title.length > 30
+                          ? '${episode.title.substring(0, 30)}...'
+                          : episode.title,
+                      fontSize: 16,
+                      color: whiteColor,
+                      fontWeight: FontWeight.w800,
+                    ),
+                    SizedBox(height: 1.spMin),
+                    // Author
+                    CustomTextWidget(
+                      text: 'By: ${episode.podcast.author}',
+                      fontSize: 13,
+                      color: greyTextColor,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    SizedBox(height: 6.spMin),
+                    // Description
+                    CustomTextWidget(
+                      text: episode.description.length > 120
+                          ? '${episode.description.substring(0, 120)}...'
+                          : episode.description,
+                      fontSize: 13,
+                      color: descriptionTextColor,
+                      fontWeight: FontWeight.w500,
+                      maxLines: 5,
+                    ),
+                    SizedBox(height: 11.spMin),
+                    // Row with buttons
+                    Row(
+                      children: [
+                        // First button
+                        Container(
+                          width: 78.5.spMin,
+                          height: 30.spMin,
+                          decoration: BoxDecoration(
+                            color: buttonGreyColor,
+                            borderRadius: BorderRadius.circular(18.spMin),
+                          ),
+                          child: Padding(
+                            padding: EdgeInsets.all(6.spMin),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Assets.svg.add.svg(
+                                  width: 18.spMin,
+                                  height: 18.spMin,
+                                  colorFilter: ColorFilter.mode(
+                                    greyTextColor,
+                                    BlendMode.srcIn,
+                                  ),
                                 ),
-                              ),
-                              SizedBox(width: 4.spMin),
-                              CustomTextWidget(
-                                text: 'Follow',
-                                fontSize: 13,
-                                color: greyTextColor,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      SizedBox(width: 10.spMin),
-                      // Second button - Share button
-                      Container(
-                        width: 30.spMin,
-                        height: 30.spMin,
-                        decoration: BoxDecoration(
-                          color: Colors.transparent,
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: offWhiteColor,
-                            width: 1.spMin,
-                          ),
-                        ),
-                        child: Center(
-                          child: Assets.svg.share.svg(
-                            width: 12.spMin,
-                            height: 12.spMin,
-                            colorFilter: ColorFilter.mode(
-                              whiteColor,
-                              BlendMode.srcIn,
+                                SizedBox(width: 4.spMin),
+                                CustomTextWidget(
+                                  text: 'Follow',
+                                  fontSize: 13,
+                                  color: greyTextColor,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ],
                             ),
                           ),
                         ),
-                      ),
-                    ],
-                  ),
-                ],
+                        SizedBox(width: 10.spMin),
+                        // Second button - Share button
+                        Container(
+                          width: 30.spMin,
+                          height: 30.spMin,
+                          decoration: BoxDecoration(
+                            color: Colors.transparent,
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: offWhiteColor,
+                              width: 1.spMin,
+                            ),
+                          ),
+                          child: Center(
+                            child: Assets.svg.share.svg(
+                              width: 12.spMin,
+                              height: 12.spMin,
+                              colorFilter: ColorFilter.mode(
+                                whiteColor,
+                                BlendMode.srcIn,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTrendingPlaceholders() {
+    return Shimmer.fromColors(
+      baseColor: darkGreyColor,
+      highlightColor: darkGreyColor2,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        padding: EdgeInsets.symmetric(horizontal: 24.spMin),
+        itemCount: 3,
+        itemBuilder: (context, index) {
+          return Container(
+            width: 283.spMin,
+            height: 351.spMin,
+            margin: EdgeInsets.only(right: 16.spMin),
+            decoration: BoxDecoration(
+              color: darkGreyColor3,
+              borderRadius: BorderRadius.circular(12.spMin),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildEditorsPickPlaceholder() {
+    return Shimmer.fromColors(
+      baseColor: darkGreyColor,
+      highlightColor: darkGreyColor2,
+      child: Container(
+        height: 206.spMin,
+        decoration: BoxDecoration(
+          color: darkGreyColor3,
+          borderRadius: BorderRadius.circular(16.spMin),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTopJollyPlaceholders() {
+    return Shimmer.fromColors(
+      baseColor: darkGreyColor,
+      highlightColor: darkGreyColor2,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        padding: EdgeInsets.only(left: 14.spMin),
+        itemCount: 3,
+        itemBuilder: (context, index) {
+          return Container(
+            width: 185.spMin,
+            height: 237.spMin,
+            margin: EdgeInsets.only(right: 10.spMin),
+            decoration: BoxDecoration(
+              color: darkGreyColor3,
+              borderRadius: BorderRadius.circular(12.spMin),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildLatestEpisodesPlaceholder() {
+    return Shimmer.fromColors(
+      baseColor: darkGreyColor,
+      highlightColor: darkGreyColor2,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        padding: EdgeInsets.only(left: 12.spMin),
+        itemCount: 2,
+        itemBuilder: (context, index) {
+          return Padding(
+            padding: EdgeInsets.only(right: 22.spMin),
+            child: SizedBox(
+              width: 300.spMin,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: List.generate(5, (rowIndex) {
+                  return Padding(
+                    padding: EdgeInsets.only(
+                      bottom: rowIndex < 4 ? 21.spMin : 0,
+                    ),
+                    child: Container(
+                      height: 80.spMin,
+                      decoration: BoxDecoration(
+                        color: darkGreyColor3,
+                        borderRadius: BorderRadius.circular(8.spMin),
+                      ),
+                    ),
+                  );
+                }),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildHandpickedPlaceholder() {
+    return Shimmer.fromColors(
+      baseColor: darkGreyColor,
+      highlightColor: darkGreyColor2,
+      child: Column(
+        children: List.generate(3, (index) {
+          return Padding(
+            padding: EdgeInsets.symmetric(horizontal: 24.spMin),
+            child: Container(
+              width: 382.spMin,
+              height: 500.spMin,
+              margin: EdgeInsets.only(bottom: index < 2 ? 20.spMin : 0),
+              decoration: BoxDecoration(
+                color: darkGreyColor3,
+                borderRadius: BorderRadius.circular(12.spMin),
+              ),
+            ),
+          );
+        }),
       ),
     );
   }

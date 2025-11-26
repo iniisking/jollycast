@@ -51,22 +51,7 @@ class AuthService {
   }
 
   // Parse user from JSON
-  static User _parseUser(Map<String, dynamic> json) {
-    return User(
-      id: json['id'] as int,
-      firstName: json['first_name'] as String,
-      lastName: json['last_name'] as String,
-      phoneNumber: json['phone_number'] as String,
-      email: json['email'] as String,
-      jollyEmail: json['jolly_email'] as String,
-      country: json['country'] as String,
-      personalizations: (json['personalizations'] as List)
-          .map((e) => e as String)
-          .toList(),
-      createdAt: DateTime.parse(json['created_at'] as String),
-      updatedAt: DateTime.parse(json['updated_at'] as String),
-    );
-  }
+  static User _parseUser(Map<String, dynamic> json) => User.fromJson(json);
 
   // Parse subscription from JSON
   static Subscription _parseSubscription(Map<String, dynamic> json) {

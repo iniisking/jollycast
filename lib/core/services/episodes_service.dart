@@ -113,6 +113,35 @@ class EpisodesService {
     );
   }
 
+  // Get single episode by id
+  static Future<Episode> getEpisodeById({
+    required int id,
+    String? token,
+  }) async {
+    try {
+      final response = await ApiService.get(
+        ApiEndpoints.episode(id),
+        headers: _buildHeaders(token: token),
+      );
+
+      if (ApiService.isSuccess(response.statusCode)) {
+        final jsonData = jsonDecode(response.body) as Map<String, dynamic>;
+        AppLogger.info('Episode $id fetched successfully');
+        final data = jsonData['data']['data'] as Map<String, dynamic>;
+        return _parseEpisode(data);
+      } else {
+        final errorMessage = ErrorParser.parseErrorResponse(response.body);
+        AppLogger.error(
+          'Failed to fetch episode $id',
+          'Status: ${response.statusCode}, Body: ${response.body}',
+        );
+        throw Exception(errorMessage);
+      }
+    } catch (e) {
+      rethrow;
+    }
+  }
+
   // Parse podcast
   static Podcast _parsePodcast(Map<String, dynamic> json) {
     return Podcast(
@@ -120,11 +149,11 @@ class EpisodesService {
       userId: json['user_id'] as int,
       title: json['title'] as String,
       author: json['author'] as String,
-      categoryName: json['category_name'] as String,
-      categoryType: json['category_type'] as String,
+      categoryName: (json['category_name'] as String?) ?? '',
+      categoryType: (json['category_type'] as String?) ?? '',
       pictureUrl: json['picture_url'] as String,
       coverPictureUrl: json['cover_picture_url'] as String?,
-      description: json['description'] as String,
+      description: (json['description'] as String?) ?? '',
       embeddablePlayerSettings: json['embeddable_player_settings'],
       createdAt: DateTime.parse(json['created_at'] as String),
       updatedAt: DateTime.parse(json['updated_at'] as String),
@@ -227,11 +256,11 @@ class EpisodesService {
       userId: json['user_id'] as int,
       title: json['title'] as String,
       author: json['author'] as String,
-      categoryName: json['category_name'] as String,
-      categoryType: json['category_type'] as String,
+      categoryName: (json['category_name'] as String?) ?? '',
+      categoryType: (json['category_type'] as String?) ?? '',
       pictureUrl: json['picture_url'] as String,
       coverPictureUrl: json['cover_picture_url'] as String?,
-      description: json['description'] as String,
+      description: (json['description'] as String?) ?? '',
       embeddablePlayerSettings: json['embeddable_player_settings'],
       createdAt: DateTime.parse(json['created_at'] as String),
       updatedAt: DateTime.parse(json['updated_at'] as String),

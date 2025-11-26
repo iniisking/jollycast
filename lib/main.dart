@@ -4,9 +4,11 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:jollycast/core/provider/auth_controller.dart';
 import 'package:jollycast/core/provider/episodes_controller.dart';
+import 'package:jollycast/core/provider/audio_player_controller.dart';
 import 'package:jollycast/core/auth/auth_wrapper.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
   runApp(const MyApp());
 }
 
@@ -25,6 +27,7 @@ class MyApp extends StatelessWidget {
           providers: [
             ChangeNotifierProvider(create: (_) => AuthController()),
             ChangeNotifierProvider(create: (_) => EpisodesController()),
+            ChangeNotifierProvider(create: (_) => AudioPlayerController()),
           ],
           child: MaterialApp(
             debugShowCheckedModeBanner: false,

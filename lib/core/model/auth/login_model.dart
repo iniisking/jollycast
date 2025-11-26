@@ -106,4 +106,36 @@ class User {
     required this.createdAt,
     required this.updatedAt,
   });
+
+  factory User.fromJson(Map<String, dynamic> json) {
+    return User(
+      id: json['id'] as int,
+      firstName: json['first_name'] as String,
+      lastName: json['last_name'] as String,
+      phoneNumber: json['phone_number'] as String,
+      email: json['email'] as String,
+      jollyEmail: json['jolly_email'] as String? ?? '',
+      country: json['country'] as String? ?? '',
+      personalizations: (json['personalizations'] as List<dynamic>? ?? [])
+          .map((e) => e.toString())
+          .toList(),
+      createdAt: DateTime.parse(json['created_at'] as String),
+      updatedAt: DateTime.parse(json['updated_at'] as String),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'first_name': firstName,
+      'last_name': lastName,
+      'phone_number': phoneNumber,
+      'email': email,
+      'jolly_email': jollyEmail,
+      'country': country,
+      'personalizations': personalizations,
+      'created_at': createdAt.toIso8601String(),
+      'updated_at': updatedAt.toIso8601String(),
+    };
+  }
 }

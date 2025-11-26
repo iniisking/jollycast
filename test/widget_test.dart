@@ -6,16 +6,20 @@
 // tree, read text, and verify that the values of widget properties are correct.
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:jollycast/main.dart';
 
 void main() {
-  testWidgets('App starts and shows LoginScreen', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
-    await tester.pumpAndSettle();
+  TestWidgetsFlutterBinding.ensureInitialized();
+  SharedPreferences.setMockInitialValues({});
+  FlutterSecureStorage.setMockInitialValues({});
 
-    // Verify that the LoginScreen is displayed
+  testWidgets('App starts and shows LoginScreen', (WidgetTester tester) async {
+    await tester.pumpWidget(const MyApp());
+    await tester.pumpAndSettle(const Duration(milliseconds: 100));
+
     expect(find.text('PODCASTS FOR\nAFRICA, BY AFRICANS'), findsOneWidget);
     expect(find.text('Login'), findsOneWidget);
   });

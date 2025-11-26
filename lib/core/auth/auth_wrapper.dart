@@ -11,12 +11,32 @@ class AuthWrapper extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<AuthController>(
       builder: (context, authController, child) {
+        if (authController.isRestoringSession) {
+          return const _SplashScreen();
+        }
         if (authController.isAuthenticated) {
           return const MainScreen();
         } else {
           return const LoginScreen();
         }
       },
+    );
+  }
+}
+
+class _SplashScreen extends StatelessWidget {
+  const _SplashScreen();
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: SizedBox.expand(
+        child: Image.asset(
+          'assets/images/splash screen jolly.png',
+          fit: BoxFit.cover,
+        ),
+      ),
     );
   }
 }
