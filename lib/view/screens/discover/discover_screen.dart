@@ -8,9 +8,12 @@ import 'package:jollycast/view/widgets/color.dart';
 import 'package:jollycast/view/widgets/appbar.dart';
 import 'package:jollycast/view/widgets/text.dart';
 import 'package:jollycast/view/widgets/card.dart';
+import 'package:jollycast/view/widgets/section_header.dart';
+import 'package:jollycast/view/widgets/see_all_button.dart';
 import 'package:jollycast/core/provider/episodes_controller.dart';
-import 'package:jollycast/core/provider/auth_controller.dart';
 import 'package:jollycast/core/provider/audio_player_controller.dart';
+import 'package:jollycast/utils/navigation_helper.dart';
+import 'package:jollycast/utils/provider_helper.dart';
 import 'package:intl/intl.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:jollycast/core/model/episodes/get_trending_model.dart';
@@ -35,11 +38,8 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
 
   void _setupAuthErrorHandler() {
     if (!mounted) return;
-    final episodesController = Provider.of<EpisodesController>(
-      context,
-      listen: false,
-    );
-    final authController = Provider.of<AuthController>(context, listen: false);
+    final episodesController = ProviderHelper.episodes(context);
+    final authController = ProviderHelper.auth(context);
     episodesController.setAuthErrorHandler(() {
       authController.logout();
     });
@@ -48,15 +48,10 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
   void _loadData() {
     if (!mounted) return;
     try {
-      final episodesController = Provider.of<EpisodesController>(
-        context,
-        listen: false,
-      );
-      final authController = Provider.of<AuthController>(
-        context,
-        listen: false,
-      );
-      final token = authController.token;
+      final episodesController = ProviderHelper.episodes(context);
+      final token = ProviderHelper.token(context);
+      if (token == null) return;
+
       // Load all necessary data for discover screen
       episodesController.getTrendingEpisodes(
         page: 1,
@@ -76,12 +71,9 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
   }
 
   Future<void> _onRefresh() async {
-    final episodesController = Provider.of<EpisodesController>(
-      context,
-      listen: false,
-    );
-    final authController = Provider.of<AuthController>(context, listen: false);
-    final token = authController.token;
+    final episodesController = ProviderHelper.episodes(context);
+    final token = ProviderHelper.token(context);
+    if (token == null) return;
 
     await Future.wait([
       episodesController.refreshTrendingEpisodes(token: token),
@@ -93,31 +85,22 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
   }
 
   Future<void> _openPlayerScreen(Episode episode) async {
-    final episodesController = Provider.of<EpisodesController>(
-      context,
-      listen: false,
-    );
-    final audioController = Provider.of<AudioPlayerController>(
-      context,
-      listen: false,
-    );
-    final authToken = Provider.of<AuthController>(context, listen: false).token;
+    final episodesController = ProviderHelper.episodes(context);
+    final audioController = ProviderHelper.audio(context);
+    final token = ProviderHelper.token(context);
+    if (token == null) return;
 
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => const Center(child: CircularProgressIndicator()),
-    );
+    NavigationHelper.showLoadingDialog(context);
 
     Episode? detailed;
     try {
       detailed = await episodesController.getEpisodeById(
         id: episode.id,
-        token: authToken,
+        token: token,
       );
     } finally {
       if (mounted) {
-        Navigator.of(context, rootNavigator: true).pop();
+        NavigationHelper.hideLoadingDialog(context);
       }
     }
 
@@ -129,20 +112,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
     await audioController.playEpisode(episodeToPlay);
 
     Navigator.of(context).push(
-      PageRouteBuilder(
-        transitionDuration: const Duration(milliseconds: 350),
-        pageBuilder: (_, animation, __) => FadeTransition(
-          opacity: animation,
-          child: PlayerScreen(episode: episodeToPlay),
-        ),
-        transitionsBuilder: (_, animation, __, child) {
-          final offsetAnimation = Tween<Offset>(
-            begin: const Offset(0, 1),
-            end: Offset.zero,
-          ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOut));
-          return SlideTransition(position: offsetAnimation, child: child);
-        },
-      ),
+      NavigationHelper.slideUpTransition(PlayerScreen(episode: episodeToPlay)),
     );
   }
 
@@ -165,27 +135,9 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Hot & trending episodes section
-                  Padding(
-                    padding: EdgeInsets.only(
-                      left: 23.spMin,
-                      top: 24.spMin,
-                      bottom: 17.spMin,
-                    ),
-                    child: Row(
-                      children: [
-                        Assets.images.fire.image(
-                          width: 27.spMin,
-                          height: 36.spMin,
-                        ),
-                        SizedBox(width: 8.spMin),
-                        CustomTextWidget(
-                          text: 'Hot & trending episodes',
-                          fontSize: 24,
-                          color: whiteColor,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ],
-                    ),
+                  SectionHeader(
+                    icon: Assets.images.fire.image(),
+                    title: 'Hot & trending episodes',
                   ),
                   SizedBox(
                     height: 400.spMin,
@@ -233,23 +185,13 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                   ),
                   SizedBox(height: 57.spMin),
                   // Editor's pick section
-                  Padding(
+                  SectionHeader(
+                    icon: Assets.svg.purpleStar.svg(),
+                    title: "Editor's pick",
                     padding: EdgeInsets.only(left: 23.spMin, bottom: 16.spMin),
-                    child: Row(
-                      children: [
-                        Assets.svg.purpleStar.svg(
-                          width: 27.spMin,
-                          height: 27.spMin,
-                        ),
-                        SizedBox(width: 5.spMin),
-                        CustomTextWidget(
-                          text: "Editor's pick",
-                          fontSize: 24,
-                          color: whiteColor,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ],
-                    ),
+                    iconWidth: 27,
+                    iconHeight: 27,
+                    spacing: 5,
                   ),
                   SizedBox(height: 17.spMin),
                   Padding(
@@ -273,26 +215,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                           color: whiteColor,
                           fontWeight: FontWeight.w800,
                         ),
-                        Container(
-                          width: 78.spMin,
-                          height: 30.spMin,
-                          decoration: BoxDecoration(
-                            color: Colors.transparent,
-                            borderRadius: BorderRadius.circular(18.spMin),
-                            border: Border.all(
-                              color: whiteColor,
-                              width: 1.spMin,
-                            ),
-                          ),
-                          child: Center(
-                            child: CustomTextWidget(
-                              text: 'See all',
-                              fontSize: 13,
-                              color: whiteColor,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
+                        SeeAllButton(),
                       ],
                     ),
                   ),
@@ -327,26 +250,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                           color: whiteColor,
                           fontWeight: FontWeight.w800,
                         ),
-                        Container(
-                          width: 101.spMin,
-                          height: 30.spMin,
-                          decoration: BoxDecoration(
-                            color: Colors.transparent,
-                            borderRadius: BorderRadius.circular(18.spMin),
-                            border: Border.all(
-                              color: whiteColor,
-                              width: 1.spMin,
-                            ),
-                          ),
-                          child: Center(
-                            child: CustomTextWidget(
-                              text: 'Shuffle play',
-                              fontSize: 13,
-                              color: whiteColor,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
+                        SeeAllButton(text: 'Shuffle play', width: 101),
                       ],
                     ),
                   ),
@@ -599,24 +503,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                   ),
                   SizedBox(height: 40.spMin),
                   // See all button
-                  Center(
-                    child: Container(
-                      width: 238.spMin,
-                      height: 48.spMin,
-                      decoration: BoxDecoration(
-                        color: buttonGreyColor,
-                        borderRadius: BorderRadius.circular(22.spMin),
-                      ),
-                      child: Center(
-                        child: CustomTextWidget(
-                          text: 'See all',
-                          fontSize: 16,
-                          color: whiteColor,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ),
-                  ),
+                  Center(child: SeeAllButton.large()),
                   SizedBox(height: 58.spMin),
                   // Mixed by interest & categories
                   Padding(
@@ -715,24 +602,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                   ),
                   SizedBox(height: 40.spMin),
                   // Show all button
-                  Center(
-                    child: Container(
-                      width: 238.spMin,
-                      height: 48.spMin,
-                      decoration: BoxDecoration(
-                        color: buttonGreyColor,
-                        borderRadius: BorderRadius.circular(22.spMin),
-                      ),
-                      child: Center(
-                        child: CustomTextWidget(
-                          text: 'Show all',
-                          fontSize: 16,
-                          color: whiteColor,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ),
-                  ),
+                  Center(child: SeeAllButton.large(text: 'Show all')),
                   SizedBox(height: 76.spMin),
                   // Handpicked for you section
                   Padding(
