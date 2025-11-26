@@ -7,6 +7,7 @@ enum ConnectivityStatus { online, offline }
 class ConnectivityService extends ChangeNotifier {
   final Connectivity _connectivity = Connectivity();
   StreamSubscription<List<ConnectivityResult>>? _subscription;
+  Timer? _periodicCheckTimer;
   ConnectivityStatus _status = ConnectivityStatus.online;
   bool _isInitialized = false;
 
@@ -34,12 +35,20 @@ class ConnectivityService extends ChangeNotifier {
           // Handle stream errors gracefully (e.g., MissingPluginException)
           if (kDebugMode) {
             print(
-              'ConnectivityService: Stream error, defaulting to online. Error: $error',
+              'ConnectivityService: Stream error, re-checking connectivity. Error: $error',
             );
           }
-          // Don't change status on stream error, keep current status
+          // Re-check connectivity when stream error occurs
+          checkConnectivity();
         },
         cancelOnError: false,
+      );
+
+      // Periodic check to ensure connectivity status is accurate
+      // This helps catch cases where the stream might miss updates
+      _periodicCheckTimer = Timer.periodic(
+        const Duration(seconds: 5),
+        (_) => checkConnectivity(),
       );
     } catch (e) {
       // Handle MissingPluginException gracefully (e.g., during hot reload)
@@ -89,7 +98,7 @@ class ConnectivityService extends ChangeNotifier {
         ? ConnectivityStatus.online
         : ConnectivityStatus.offline;
 
-    // Only notify if status changed
+    // Notify listeners when status changes
     if (previousStatus != _status) {
       notifyListeners();
     }
@@ -98,6 +107,7 @@ class ConnectivityService extends ChangeNotifier {
   @override
   void dispose() {
     _subscription?.cancel();
+    _periodicCheckTimer?.cancel();
     super.dispose();
   }
 }
