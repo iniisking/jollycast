@@ -36,7 +36,11 @@ class ConnectivityBanner extends StatelessWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.wifi_off_rounded, color: whiteColor, size: 20.spMin),
+                  Icon(
+                    Icons.wifi_off_rounded,
+                    color: whiteColor,
+                    size: 20.spMin,
+                  ),
                   SizedBox(width: 8.spMin),
                   CustomTextWidget(
                     text: 'No Internet Connection',
